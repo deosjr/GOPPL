@@ -1,7 +1,7 @@
 
 package prolog
 
-import "fmt"
+//import "fmt"
 
 func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Alias) {
 
@@ -72,35 +72,4 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 		return unify(c1.args, c2.args, aliases)
 	}
 	return false, nil
-}
-
-func rec_substitute(c Compound_Term, a Alias, scope Alias) Compound_Term {
-	
-	sub_args := []Term{}
-	for _,t := range c.args {
-		switch t.(type){
-		case Atom:
-			sub_args = append(sub_args, t)
-		case *Var:
-			v := t.(*Var)
-			v1, ok := a[v]
-			_, in_scope := scope[v]
-			if in_scope || !ok {
-				sub_args = append(sub_args, v)
-			} else {	//var not in scope but bound in a
-				switch v1.(type) {
-				case Compound_Term:
-					sub_c := rec_substitute(v1.(Compound_Term), a, scope)
-					sub_args = append(sub_args, sub_c)
-				default:
-					sub_args = append(sub_args, v1)
-				}
-				fmt.Println(v1)
-			}
-		case Compound_Term:
-			sub_c := rec_substitute(t.(Compound_Term), a, scope)
-			sub_args = append(sub_args, sub_c)
-		}
-	}
-	return Compound_Term{c.pred, sub_args}
 }

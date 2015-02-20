@@ -3,20 +3,18 @@ package prolog
 
 import "fmt"
 
-func (a Atom) Term_to_string() string{ return a.value}
-
-func (v *Var) Term_to_string() string{ return v.name}
+func (a Atom) String() string{ return a.value}
 
 func (v *Var) String() string { return v.name }
 
-func (c Compound_Term) Term_to_string() string{ 
+func (c Compound_Term) String() string{ 
 	s := c.pred.functor + "("
 	for i,t := range c.args {
 		if i == c.pred.arity-1 {
-			s += t.Term_to_string()
+			s += t.String()
 			break
 		}
-		s += t.Term_to_string() + ","
+		s += t.String() + ","
 	}
 	return s + ")"
 }
@@ -24,7 +22,7 @@ func (c Compound_Term) Term_to_string() string{
 func (tlist Terms) String() string {
 	s := "["
 	for _,t := range tlist {
-		s = s + t.Term_to_string() + " "
+		s = s + t.String() + " "
 	}
 	return s + "]"
 } 
@@ -32,7 +30,7 @@ func (tlist Terms) String() string {
 func (a Alias) String() string {
 	s := "{"
 	for k,v := range a {
-		s = s + k.String() + ":" + v.Term_to_string() + " "
+		s = s + k.String() + ":" + v.String() + " "
 	}
 	return s + "}"
 }
@@ -43,10 +41,10 @@ func Print_memory() {
 			fmt.Printf("%s(", k.functor)
 			for i,h := range rule.head {
 				if i == k.arity-1 {
-					fmt.Printf("%s)", h.Term_to_string())
+					fmt.Printf("%s)", h.String())
 					break
 				}
-				fmt.Printf("%s,",h.Term_to_string())
+				fmt.Printf("%s,",h.String())
 			}
 			if len(rule.body) == 0 {
 				fmt.Println(".")
@@ -54,10 +52,10 @@ func Print_memory() {
 				fmt.Println(" :-")
 				for i,b := range rule.body {
 					if i == len(rule.body)-1 {
-						fmt.Printf("\t%s.", b.Term_to_string())
+						fmt.Printf("\t%s.", b.String())
 						break
 					}
-					fmt.Printf("\t%s,\n",b.Term_to_string())
+					fmt.Printf("\t%s,\n",b.String())
 				}
 				fmt.Println()
 			}
@@ -68,11 +66,11 @@ func Print_memory() {
 
 // Contains the ; wait loop. Set wait=false for auto all evaluations
 func Print_answer(query []Term, answer chan Alias) {
-	fmt.Printf("?- %s.\n", query[0].Term_to_string())
+	fmt.Printf("?- %s.\n", query[0].String())
 	wait := false
 	for alias := range answer {
 		for k,v := range alias {
-			fmt.Printf("%s = %s. ", k, v.Term_to_string())
+			fmt.Printf("%s = %s. ", k, v.String())
 		}
 		if wait {
 			for {

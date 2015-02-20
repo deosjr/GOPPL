@@ -16,10 +16,14 @@ type Terms []Term
 type Alias map[*Var]Term
 
 type Term interface {
-	Term_to_string() string
+	String() string
 	compare_to(Term) bool
 	ground(Alias) bool
 }
+
+//TODO: Lists.
+//type List Compound_Term
+//overwriting Term_to_string etc. Is that (elegantly) possible in Go?
 
 type Atom struct {
 	value string
