@@ -22,22 +22,22 @@ func InitLists() Terms {
 	// atm this is the builtin definition for prolog lists
 	list := Predicate{"LIST",2}
 	ruleToMem(list, Rule{Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}, Terms{}})
-	tlist := List{list, Terms{Atom{"_"}, List{list, Terms{Atom{"_"}, List{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}}}}
+	tlist := List{Compound_Term{list, Terms{Atom{"_"}, List{Compound_Term{list, Terms{Atom{"_"}, List{Compound_Term{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}}}}}}}
 	ruleToMem(list, Rule{Terms{Atom{"_"}, tlist}, Terms{}})
 	
 	// now lets try concatenation
-	empty_list := List{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}
+	empty_list := List{Compound_Term{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}
 	l := &Var{"L"}
 	ruleToMem(Predicate{"cat",3}, Rule{Terms{empty_list, l, l}, Terms{}})
 	h, t, r := &Var{"H"}, &Var{"T"}, &Var{"R"}
-	ht := List{list, Terms{h, t}}
-	hr  := List{list, Terms{h, r}}
+	ht := List{Compound_Term{list, Terms{h, t}}}
+	hr  := List{Compound_Term{list, Terms{h, r}}}
 	reccat := Compound_Term{Predicate{"cat",3}, Terms{t,l,r}}
 	ruleToMem(Predicate{"cat",3}, Rule{Terms{ht, l, hr}, Terms{reccat}})
 	
 	// query
-	l12 := List{list, Terms{Atom{"1"}, List{list, Terms{Atom{"2"}, empty_list}}}}
-	l345 := List{list, Terms{Atom{"3"}, List{list, Terms{Atom{"4"}, List{list, Terms{Atom{"5"}, empty_list}}}}}}
+	l12 := List{Compound_Term{list, Terms{Atom{"1"}, List{Compound_Term{list, Terms{Atom{"2"}, empty_list}}}}}}
+	l345 := List{Compound_Term{list, Terms{Atom{"3"}, List{Compound_Term{list, Terms{Atom{"4"}, List{Compound_Term{list, Terms{Atom{"5"}, empty_list}}}}}}}}}
 	cat := Compound_Term{Predicate{"cat",3}, Terms{l12,l345,l}}
 	query := Terms{cat}
 	

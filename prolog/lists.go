@@ -4,7 +4,9 @@ package prolog
 //import "fmt"
 
 // List Predicate = {"LIST", 2}
-type List Compound_Term
+type List struct {
+	Compound_Term
+}
 
 func (l List) String() string{ 
 	if l.isEmpty() {
@@ -22,34 +24,6 @@ func (l List) String() string{
 	}
 	// TODO: doesnt take into account var X halfway string thats otherwise grounded
 	return  "[" + l.head().String() + "|" + tail.String() + "]"
-}
-
-// TODO: compare_to and ground copied from Compound_Term
-// how to access those directly?
-
-func (l List) compare_to(t Term) bool {
-	switch t.(type) {
-	case Compound_Term:
-		tc := t.(Compound_Term)
-		if l.pred == tc.pred {
-			for i:=0; i < len(l.args); i++ {
-				if !l.args[i].compare_to(tc.args[i]) {
-					return false
-				}
-			}
-			return true
-		}
-	}
-	return false
-}
-
-func (l List) ground(alias Alias) bool {
-	for _,t := range l.args {
-		if !t.ground(alias) {
-			return false
-		}
-	}
-	return true
 }
 
 func (l List) head() Term {

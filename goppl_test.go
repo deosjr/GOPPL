@@ -69,3 +69,14 @@ func TestPeano(t *testing.T) {
 	}
 	evaluateQuery(t, testAnswers, answer)
 }
+
+func TestLists(t *testing.T) {
+	query := prolog.InitLists()
+	stack := prolog.InitStack(query)
+	answer := make(chan prolog.Alias, 1)
+	go prolog.DFS(stack, answer)
+	testAnswers := []map[string]string{
+		{"L":"[1,2,3,4,5]"},
+	}
+	evaluateQuery(t, testAnswers, answer)
+}	
