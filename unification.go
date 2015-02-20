@@ -1,7 +1,7 @@
 
 package prolog
 
-import "fmt"
+//import "fmt"
 
 func update_alias(aliases Alias, updates Alias) (clash bool) {
 
@@ -44,7 +44,6 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 			return false, nil
 		}
 	}
-	
 	return true, newalias
 }
 
@@ -111,7 +110,6 @@ func rename_alias(alias Alias, t1 *Var, t2 Term) (bool, Alias){
 				return true, newalias
 			} else { break Loop }
 		}
-		
 	}
 	return false, newalias
 }
@@ -131,12 +129,34 @@ func clean_up_vars_out_of_scope(to_clean Alias, scope Alias) Alias {
 				break Loop
 			case Compound_Term:
 				//TODO: X = s(N), N = 0 --> X = s(0)
-				fmt.Println(value.ground(to_clean), value.ground(scope))
-				clean[k] = value
+				clean[k] = rec_substitute(value.(Compound_Term), to_clean, scope)
 				break Loop
 			}
 		}
 	}
 	return clean
+}
 
+func rec_substitute(c Compound_Term, a Alias, scope Alias) Compound_Term {
+	
+	sub_args := []Term{}
+	for _,t := range c.args {
+		switch t.(type){
+		case Atom:
+			sub_args = append(sub_args, t)
+		case *Var:
+			v := t.(*Var)
+			v1, ok := a[v]
+			_, in_scope := scope[v]
+			if in_scope || !ok {
+				sub_args = append(sub_args, v)
+			} else {	//var not in scope but bound in a
+				sub_args = append(sub_args, v1)
+			}
+		case Compound_Term:
+			sub_c := rec_substitute(t.(Compound_Term), a, scope)
+			sub_args = append(sub_args, sub_c)
+		}
+	}
+	return Compound_Term{c.pred, sub_args}
 }

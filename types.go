@@ -49,6 +49,8 @@ func (c Compound_Term) Term_to_string() string{
 	return s + ")"
 }
 
+//TODO: check Equaler interface!
+
 func (a Atom) compare_to(t Term) bool {
 	switch t.(type) {
 	case Atom:
