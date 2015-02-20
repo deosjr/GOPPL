@@ -11,40 +11,13 @@ func ruleToMem(pred Predicate, r Rule) {
 	}
 }
 
+//TODO: take a .pl file as input and parse
 func InitMemory() Terms {
-	/**
-	ruleToMem(Predicate{"sym",1}, Rule{Terms{Atom{"a"}}, Terms{}})
-	ruleToMem(Predicate{"sym",1}, Rule{Terms{Atom{"b"}}, Terms{}})
-	h1 := &Var{"H1"}
-	h2 := &Var{"H2"}
-	sym1 := Compound_Term{Predicate{"sym",1}, Terms{h1}}
-	sym2 := Compound_Term{Predicate{"sym",1}, Terms{h2}}
-	ruleToMem(Predicate{"hardcoded2", 2}, Rule{Terms{h1,h2}, Terms{sym1, sym2}})
-	x,y := &Var{"X"}, &Var{"Y"}
-	h := Compound_Term{Predicate{"hardcoded2",2}, Terms{x,y}}
-	query := Terms{h}
-	*/
-	/**
-	ruleToMem(Predicate{"p",1}, Rule{Terms{Atom{"a"}}, Terms{}})
-	x := &Var{"X"}
-	qx1 := Compound_Term{Predicate{"q",1}, Terms{x}}
-	rx1 := Compound_Term{Predicate{"r",1}, Terms{x}}
-	ruleToMem(Predicate{"p",1}, Rule{Terms{x}, Terms{qx1, rx1}})
-	ux2 := Compound_Term{Predicate{"u",1}, Terms{x}}
-	ruleToMem(Predicate{"p",1}, Rule{Terms{x}, Terms{ux2}})
-	sx3 := Compound_Term{Predicate{"s",1}, Terms{x}}
-	ruleToMem(Predicate{"q",1}, Rule{Terms{x}, Terms{sx3}})
-	ruleToMem(Predicate{"r",1}, Rule{Terms{Atom{"a"}}, Terms{}})
-	ruleToMem(Predicate{"r",1}, Rule{Terms{Atom{"b"}}, Terms{}})
-	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"a"}}, Terms{}})
-	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"b"}}, Terms{}})
-	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"c"}}, Terms{}})
-	ruleToMem(Predicate{"u",1}, Rule{Terms{Atom{"d"}}, Terms{}})
-	
-	px := Compound_Term{Predicate{"p",1}, Terms{x}}
-	query := Terms{px}
-	*/
-	
+	return InitPeano()
+}
+
+//TODO: move to separate testfiles!
+func InitPeano() Terms {
 	s := Predicate{"s",1}
 	ruleToMem(Predicate{"int",1}, Rule{Terms{Atom{"0"}}, Terms{}})
 	m := &Var{"M"}
@@ -65,7 +38,41 @@ func InitMemory() Terms {
 	s3 := Compound_Term{s, Terms{Compound_Term{s, Terms{Compound_Term{s, Terms{Atom{"0"}}}}}}}
 	sum := Compound_Term{Predicate{"sum",3}, Terms{s2,s3,x}}
 	query := Terms{sum}
+	return query
+}
+
+func InitPerms() Terms {
+	ruleToMem(Predicate{"sym",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	ruleToMem(Predicate{"sym",1}, Rule{Terms{Atom{"b"}}, Terms{}})
+	h1 := &Var{"H1"}
+	h2 := &Var{"H2"}
+	sym1 := Compound_Term{Predicate{"sym",1}, Terms{h1}}
+	sym2 := Compound_Term{Predicate{"sym",1}, Terms{h2}}
+	ruleToMem(Predicate{"hardcoded2", 2}, Rule{Terms{h1,h2}, Terms{sym1, sym2}})
+	x,y := &Var{"X"}, &Var{"Y"}
+	h := Compound_Term{Predicate{"hardcoded2",2}, Terms{x,y}}
+	query := Terms{h}
+	return query
+}
+
+func InitExample() Terms {
+	ruleToMem(Predicate{"p",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	x := &Var{"X"}
+	qx1 := Compound_Term{Predicate{"q",1}, Terms{x}}
+	rx1 := Compound_Term{Predicate{"r",1}, Terms{x}}
+	ruleToMem(Predicate{"p",1}, Rule{Terms{x}, Terms{qx1, rx1}})
+	ux2 := Compound_Term{Predicate{"u",1}, Terms{x}}
+	ruleToMem(Predicate{"p",1}, Rule{Terms{x}, Terms{ux2}})
+	sx3 := Compound_Term{Predicate{"s",1}, Terms{x}}
+	ruleToMem(Predicate{"q",1}, Rule{Terms{x}, Terms{sx3}})
+	ruleToMem(Predicate{"r",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	ruleToMem(Predicate{"r",1}, Rule{Terms{Atom{"b"}}, Terms{}})
+	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"b"}}, Terms{}})
+	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"c"}}, Terms{}})
+	ruleToMem(Predicate{"u",1}, Rule{Terms{Atom{"d"}}, Terms{}})
 	
-	
+	px := Compound_Term{Predicate{"p",1}, Terms{x}}
+	query := Terms{px}
 	return query
 }

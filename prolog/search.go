@@ -1,7 +1,7 @@
 
 package prolog
 
-import "fmt"
+//import "fmt"
 
 // newest item in stack at termlist[len-1] (->)
 type Stack_Item struct {
@@ -19,7 +19,7 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 	// and only compound terms (no =, is etc)
 	
 	terms, aliases := stack_item.termlist, stack_item.aliases
-	fmt.Println("CALL", terms, aliases)
+	//fmt.Println("CALL", terms, aliases)
 	if len(terms) == 0 {
 		answer <- aliases
 		close(answer)
@@ -36,14 +36,14 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 	} else {
 		for _,rule_template := range rules {
 			rule := call_rule(rule_template)
-			fmt.Println("RULE", term.pred.functor, rule.head, rule.body)
+			//fmt.Println("RULE", term.pred.functor, rule.head, rule.body)
 			new_terms := terms
 			new_alias := make(Alias)
 			for k,v := range aliases {
 				new_alias[k] = v
 			}
 			unifies, al := unify(term.args, rule.head, new_alias)
-			fmt.Println("UNIFIES?", unifies, term.args, rule.head, new_alias, al)
+			//fmt.Println("UNIFIES?", unifies, term.args, rule.head, new_alias, al)
 			if !unifies {
 				continue
 			}
@@ -58,7 +58,7 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 			rec_answer := make(chan Alias)
 			go DFS(si, rec_answer)
 			for a := range rec_answer {
-				fmt.Println("ANSWER",term,a)
+				//fmt.Println("ANSWER",term,a)
 				a = clean_up_vars_out_of_scope(a, new_alias)
 				answer <- a
 			}
