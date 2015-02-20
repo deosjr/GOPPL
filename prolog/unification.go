@@ -51,20 +51,11 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 
 	newalias = make(Alias)
 
-	// unification of two atoms:
-	if atom1, ok1 := term1.(Atom); ok1 {
-		if atom2, ok2 := term2.(Atom); ok2 {
-			if atom1.value == atom2.value {
-				return true, newalias
-			}
-		}
 	// unification of var1:
-	} else if var1, ok := term1.(*Var); ok {
+	if var1, ok := term1.(*Var); ok {
 		// already unified
-		if _, contains := aliases[var1]; contains {
-			if renamed, newalias := rename_alias(aliases, var1, term2); renamed {
-				return true, newalias
-			}
+		if bound, contains := aliases[var1]; contains {
+			return unify_term(bound, term2, aliases)
 		// var1 and var2
 		} else if var2, ok2 := term2.(*Var); ok2 {
 			newalias[var1] = var2
@@ -77,14 +68,19 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 	// unification of var2
 	} else if var2, ok := term2.(*Var); ok {
 		// already unified
-		if _, contains := aliases[var2]; contains {
-			if renamed, newalias := rename_alias(aliases, var2, term1); renamed {
-				return true, newalias
-			}
+		if bound, contains := aliases[var2]; contains {
+			return unify_term(term1, bound, aliases)
 		// var2 and nonvar1
 		} else {
 			newalias[var2] = term1
 			return true, newalias
+		}
+	// unification of two atoms:
+	} else if atom1, ok1 := term1.(Atom); ok1 {
+		if atom2, ok2 := term2.(Atom); ok2 {
+			if atom1.value == atom2.value {
+				return true, newalias
+			}
 		}
 	// can't unify compound term with atom
 	} else if _, ok2 := term2.(Atom); ok2 { 
@@ -94,27 +90,6 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 		return unify(c1.args, c2.args, aliases)
 	}
 	return false, nil
-}
-
-func rename_alias(alias Alias, t1 *Var, t2 Term) (bool, Alias){
-
-	newalias := make(Alias)
-	
-	var temp Term = t1
-	Loop: for {
-		value, contains := alias[temp.(*Var)]
-		if !contains { break }
-		switch value.(type) {
-		case *Var:
-			temp = value
-		default:
-			if value.compare_to(t2) {
-				newalias[t1] = t2
-				return true, newalias
-			} else { break Loop }
-		}
-	}
-	return false, newalias
 }
 
 func clean_up_vars_out_of_scope(to_clean Alias, scope Alias) Alias {
@@ -131,7 +106,6 @@ func clean_up_vars_out_of_scope(to_clean Alias, scope Alias) Alias {
 				clean[k] = value
 				break Loop
 			case Compound_Term:
-				//TODO: X = s(N), N = 0 --> X = s(0)
 				clean[k] = rec_substitute(value.(Compound_Term), to_clean, scope)
 				break Loop
 			}
