@@ -68,8 +68,8 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 	} else if _, ok2 := term2.(Atom); ok2 { 
 		return false, nil
 	// unification of two compound terms
-	} else if c1, c2 := term1.(Compound_Term), term2.(Compound_Term); c1.pred == c2.pred {
-		return unify(c1.args, c2.args, aliases)
+	} else if c1, c2 := term1.(Compound), term2.(Compound); c1.GetPredicate() == c2.GetPredicate() {
+		return unify(c1.GetArgs(), c2.GetArgs(), aliases)
 	}
 	return false, nil
 }

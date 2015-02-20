@@ -33,10 +33,22 @@ type Var struct {
 	name string
 }
 
+type Compound interface {
+	GetPredicate() Predicate
+	GetArgs() Terms
+}
+
 // TODO: distinction between ground and unground compound terms
 type Compound_Term struct {
 	pred Predicate
 	args Terms
+}
+
+func (c Compound_Term) GetPredicate() Predicate {
+	return c.pred
+}
+func (c Compound_Term) GetArgs() Terms {
+	return c.args
 }
 
 //TODO: check Equaler interface!
@@ -59,11 +71,12 @@ func (v *Var) compare_to(t Term) bool {
 
 func (c Compound_Term) compare_to(t Term) bool {
 	switch t.(type) {
-	case Compound_Term:
-		tc := t.(Compound_Term)
-		if c.pred == tc.pred {
-			for i:=0; i < len(c.args); i++ {
-				if !c.args[i].compare_to(tc.args[i]) {
+	case Compound:
+		tc := t.(Compound)
+		if c.GetPredicate() == tc.GetPredicate() {
+			cargs, tcargs := c.GetArgs(), tc.GetArgs()
+			for i:=0; i < len(cargs); i++ {
+				if !cargs[i].compare_to(tcargs[i]) {
 					return false
 				}
 			}
