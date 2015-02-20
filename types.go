@@ -2,14 +2,18 @@
 package prolog
 
 type Rule struct {
-	head []Term
-	body []Term
+	head Terms
+	body Terms
 }
 
 type Predicate struct {
 	functor string
 	arity int
 }
+
+type Terms []Term
+
+type Alias map[*Var]Term
 
 type Term interface {
 	Term_to_string() string
@@ -28,25 +32,7 @@ type Var struct {
 // TODO: distinction between ground and unground compound terms
 type Compound_Term struct {
 	pred Predicate
-	args []Term
-}
-
-func (a Atom) Term_to_string() string{ return a.value}
-
-func (v *Var) Term_to_string() string{ return v.name}
-
-func (v *Var) String() string { return v.name }
-
-func (c Compound_Term) Term_to_string() string{ 
-	s := c.pred.functor + "("
-	for i,t := range c.args {
-		if i == c.pred.arity-1 {
-			s += t.Term_to_string()
-			break
-		}
-		s += t.Term_to_string() + ","
-	}
-	return s + ")"
+	args Terms
 }
 
 //TODO: check Equaler interface!
@@ -105,5 +91,3 @@ func (c Compound_Term) ground(alias Alias) bool {
 	}
 	return true
 }
-
-type Alias map[*Var]Term

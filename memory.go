@@ -11,49 +11,60 @@ func ruleToMem(pred Predicate, r Rule) {
 	}
 }
 
-func InitMemory() []Term {
+func InitMemory() Terms {
 	/**
-	ruleToMem(Predicate{"sym",1}, Rule{[]Term{Atom{"a"}}, []Term{}})
-	ruleToMem(Predicate{"sym",1}, Rule{[]Term{Atom{"b"}}, []Term{}})
+	ruleToMem(Predicate{"sym",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	ruleToMem(Predicate{"sym",1}, Rule{Terms{Atom{"b"}}, Terms{}})
 	h1 := &Var{"H1"}
 	h2 := &Var{"H2"}
-	sym1 := Compound_Term{Predicate{"sym",1}, []Term{h1}}
-	sym2 := Compound_Term{Predicate{"sym",1}, []Term{h2}}
-	ruleToMem(Predicate{"hardcoded2", 2}, Rule{[]Term{h1,h2}, []Term{sym1, sym2}})
+	sym1 := Compound_Term{Predicate{"sym",1}, Terms{h1}}
+	sym2 := Compound_Term{Predicate{"sym",1}, Terms{h2}}
+	ruleToMem(Predicate{"hardcoded2", 2}, Rule{Terms{h1,h2}, Terms{sym1, sym2}})
 	x,y := &Var{"X"}, &Var{"Y"}
-	h := Compound_Term{Predicate{"hardcoded2",2}, []Term{x,y}}
-	query := []Term{h}
+	h := Compound_Term{Predicate{"hardcoded2",2}, Terms{x,y}}
+	query := Terms{h}
 	*/
 	/**
-	ruleToMem(Predicate{"p",1}, Rule{[]Term{Atom{"a"}}, []Term{}})
-	x1 := &Var{"X"}
-	qx1 := Compound_Term{Predicate{"q",1}, []Term{x1}}
-	rx1 := Compound_Term{Predicate{"r",1}, []Term{x1}}
-	ruleToMem(Predicate{"p",1}, Rule{[]Term{x1}, []Term{qx1, rx1}})
-	x2 := &Var{"X"}
-	ux2 := Compound_Term{Predicate{"u",1}, []Term{x2}}
-	ruleToMem(Predicate{"p",1}, Rule{[]Term{x2}, []Term{ux2}})
-	x3 := &Var{"X"}
-	sx3 := Compound_Term{Predicate{"s",1}, []Term{x3}}
-	ruleToMem(Predicate{"q",1}, Rule{[]Term{x3}, []Term{sx3}})
-	ruleToMem(Predicate{"r",1}, Rule{[]Term{Atom{"a"}}, []Term{}})
-	ruleToMem(Predicate{"r",1}, Rule{[]Term{Atom{"b"}}, []Term{}})
-	ruleToMem(Predicate{"s",1}, Rule{[]Term{Atom{"a"}}, []Term{}})
-	ruleToMem(Predicate{"s",1}, Rule{[]Term{Atom{"b"}}, []Term{}})
-	ruleToMem(Predicate{"s",1}, Rule{[]Term{Atom{"c"}}, []Term{}})
-	ruleToMem(Predicate{"u",1}, Rule{[]Term{Atom{"d"}}, []Term{}})
+	ruleToMem(Predicate{"p",1}, Rule{Terms{Atom{"a"}}, Terms{}})
 	x := &Var{"X"}
-	px := Compound_Term{Predicate{"p",1}, []Term{x}}
-	query := []Term{px}
+	qx1 := Compound_Term{Predicate{"q",1}, Terms{x}}
+	rx1 := Compound_Term{Predicate{"r",1}, Terms{x}}
+	ruleToMem(Predicate{"p",1}, Rule{Terms{x}, Terms{qx1, rx1}})
+	ux2 := Compound_Term{Predicate{"u",1}, Terms{x}}
+	ruleToMem(Predicate{"p",1}, Rule{Terms{x}, Terms{ux2}})
+	sx3 := Compound_Term{Predicate{"s",1}, Terms{x}}
+	ruleToMem(Predicate{"q",1}, Rule{Terms{x}, Terms{sx3}})
+	ruleToMem(Predicate{"r",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	ruleToMem(Predicate{"r",1}, Rule{Terms{Atom{"b"}}, Terms{}})
+	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"a"}}, Terms{}})
+	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"b"}}, Terms{}})
+	ruleToMem(Predicate{"s",1}, Rule{Terms{Atom{"c"}}, Terms{}})
+	ruleToMem(Predicate{"u",1}, Rule{Terms{Atom{"d"}}, Terms{}})
+	
+	px := Compound_Term{Predicate{"p",1}, Terms{x}}
+	query := Terms{px}
 	*/
 	
-	ruleToMem(Predicate{"int",1}, Rule{[]Term{Atom{"0"}}, []Term{}})
-	m := &Var{"N"}
-	sm := Compound_Term{Predicate{"s",1}, []Term{m}}
-	im := Compound_Term{Predicate{"int",1}, []Term{m}}
-	ruleToMem(Predicate{"int",1}, Rule{[]Term{sm}, []Term{im}})
+	s := Predicate{"s",1}
+	ruleToMem(Predicate{"int",1}, Rule{Terms{Atom{"0"}}, Terms{}})
+	m := &Var{"M"}
+	sm := Compound_Term{s, Terms{m}}
+	im := Compound_Term{Predicate{"int",1}, Terms{m}}
+	ruleToMem(Predicate{"int",1}, Rule{Terms{sm}, Terms{im}})
+	n := &Var{"N"}
+	ruleToMem(Predicate{"sum",3}, Rule{Terms{Atom{"0"},m,m}, Terms{}})
+	k := &Var{"K"}
+	sn := Compound_Term{s, Terms{n}}
+	sk := Compound_Term{s, Terms{k}}
+	snmk := Compound_Term{Predicate{"sum",3}, Terms{n,m,k}}
+	ruleToMem(Predicate{"sum",3}, Rule{Terms{sn, m, sk}, Terms{snmk}})
+	
 	x := &Var{"X"}
-	query := []Term{Compound_Term{Predicate{"int",1}, []Term{x}}}
+	//query := Terms{Compound_Term{Predicate{"int",1}, Terms{x}}}
+	s2 := Compound_Term{s, Terms{Compound_Term{s, Terms{Atom{"0"}}}}}
+	s3 := Compound_Term{s, Terms{Compound_Term{s, Terms{Compound_Term{s, Terms{Atom{"0"}}}}}}}
+	sum := Compound_Term{Predicate{"sum",3}, Terms{s2,s3,x}}
+	query := Terms{sum}
 	
 	
 	return query

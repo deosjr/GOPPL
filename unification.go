@@ -86,6 +86,9 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 			newalias[var2] = term1
 			return true, newalias
 		}
+	// can't unify compound term with atom
+	} else if _, ok2 := term2.(Atom); ok2 { 
+		return false, nil
 	// unification of two compound terms
 	} else if c1, c2 := term1.(Compound_Term), term2.(Compound_Term); c1.pred == c2.pred {
 		return unify(c1.args, c2.args, aliases)
