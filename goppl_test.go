@@ -10,7 +10,9 @@ func evaluateQuery(t *testing.T, testAnswers []map[string]string, answer chan pr
 	for _,bindings := range testAnswers {
 		alias := <- answer
 		for k,v := range alias {
-			if v.Term_to_string() != bindings[k.String()] {
+			if _, contains := bindings[k.String()]; !contains {
+				t.Errorf("Out of scope variable %s in alias", k.String())
+			} else if v.Term_to_string() != bindings[k.String()] {
 				t.Errorf("%s bound to %s, not %s", k.String(), v.Term_to_string(), bindings[k.String()])
 			}
 			delete(bindings, k.String())

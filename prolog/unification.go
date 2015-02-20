@@ -1,25 +1,7 @@
 
 package prolog
 
-//import "fmt"
-
-func update_alias(aliases Alias, updates Alias) (clash bool) {
-
-	for k,v := range updates {
-		if av, ok := aliases[k]; ok {
-			switch av.(type) {
-			case *Var:
-				break
-			default:
-				if !av.compare_to(v) {
-					return true
-				}
-			}
-		}
-		aliases[k] = v
-	}
-	return false
-}
+import "fmt"
 
 func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Alias) {
 
@@ -38,7 +20,7 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 			//fmt.Println("TERMS DONT UNIFY")
 			return false, nil
 		}
-		clash := update_alias(newalias, al)
+		clash := updateAlias(newalias, al)
 		if clash {
 			//fmt.Println("CLASH FROM UNIFY", newalias, al)
 			return false, nil
@@ -92,28 +74,6 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 	return false, nil
 }
 
-func clean_up_vars_out_of_scope(to_clean Alias, scope Alias) Alias {
-
-	clean := make(Alias)
-	for k,_ := range scope {
-		var temp Term = k
-		Loop: for {
-			value, _ := to_clean[temp.(*Var)]
-			switch value.(type) {
-			case *Var:
-				temp = value
-			case Atom:
-				clean[k] = value
-				break Loop
-			case Compound_Term:
-				clean[k] = rec_substitute(value.(Compound_Term), to_clean, scope)
-				break Loop
-			}
-		}
-	}
-	return clean
-}
-
 func rec_substitute(c Compound_Term, a Alias, scope Alias) Compound_Term {
 	
 	sub_args := []Term{}
@@ -128,7 +88,14 @@ func rec_substitute(c Compound_Term, a Alias, scope Alias) Compound_Term {
 			if in_scope || !ok {
 				sub_args = append(sub_args, v)
 			} else {	//var not in scope but bound in a
-				sub_args = append(sub_args, v1)
+				switch v1.(type) {
+				case Compound_Term:
+					sub_c := rec_substitute(v1.(Compound_Term), a, scope)
+					sub_args = append(sub_args, sub_c)
+				default:
+					sub_args = append(sub_args, v1)
+				}
+				fmt.Println(v1)
 			}
 		case Compound_Term:
 			sub_c := rec_substitute(t.(Compound_Term), a, scope)

@@ -1,7 +1,7 @@
 
 package prolog
 
-//import "fmt"
+import "fmt"
 
 // newest item in stack at termlist[len-1] (->)
 type Stack_Item struct {
@@ -35,7 +35,7 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 		return
 	} else {
 		for _,rule_template := range rules {
-			rule := call_rule(rule_template)
+			rule := callRule(rule_template)
 			//fmt.Println("RULE", term.pred.functor, rule.head, rule.body)
 			new_terms := terms
 			new_alias := make(Alias)
@@ -48,9 +48,16 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 				continue
 			}
 			//fmt.Println("UPDATE", new_alias, al)
-			clash := update_alias(new_alias, al)
+			clash := updateAlias(new_alias, al)
 			//fmt.Println("CLASH?", clash)
-			if clash { continue }
+			if clash { 
+				continue 
+			}
+			scope := make(Alias)
+			for k,v := range aliases {
+				scope[k] = v
+			}
+			updateAlias(scope, varsInTermArgs(term.args))
 			for i := len(rule.body)-1; i >= 0; i-- {
 				new_terms = append(new_terms, rule.body[i])
 			}
@@ -58,8 +65,8 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 			rec_answer := make(chan Alias)
 			go DFS(si, rec_answer)
 			for a := range rec_answer {
-				//fmt.Println("ANSWER",term,a)
-				a = clean_up_vars_out_of_scope(a, new_alias)
+				fmt.Println("ANSWER", a, scope)
+				a = cleanUpVarsOutOfScope(a, scope)
 				answer <- a
 			}
 		}
@@ -68,23 +75,23 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 }
 
 //TODO: for efficiency, let rule templates use Var instead of *Var ?
-func call_rule(rule Rule) Rule {
+func callRule(rule Rule) Rule {
 	var_alias := make(Alias)
 	head, body := []Term{}, []Term{}
 	for _, t := range rule.head {
-		vt, var_alias := create_vars(t, var_alias)
+		vt, var_alias := createVars(t, var_alias)
 		var_alias = var_alias
 		head = append(head, vt)
 	}
 	for _, t := range rule.body {
-		vt, var_alias := create_vars(t, var_alias)
+		vt, var_alias := createVars(t, var_alias)
 		var_alias = var_alias
 		body = append(body, vt)
 	}
 	return Rule{head, body}
 }
 
-func create_vars(t Term, va Alias) (Term, Alias) {
+func createVars(t Term, va Alias) (Term, Alias) {
 	switch t.(type) {
 	case *Var:
 		v := t.(*Var)
@@ -99,7 +106,7 @@ func create_vars(t Term, va Alias) (Term, Alias) {
 		renamed_args := []Term{}
 		c := t.(Compound_Term)
 		for _, ot := range c.args {
-			vt, va := create_vars(ot, va)
+			vt, va := createVars(ot, va)
 			va = va
 			renamed_args = append(renamed_args, vt)
 		}
@@ -107,4 +114,58 @@ func create_vars(t Term, va Alias) (Term, Alias) {
 		return newc, va
 	}
 	return t, va
+}
+
+func updateAlias(aliases Alias, updates Alias) (clash bool) {
+
+	for k,v := range updates {
+		if av, ok := aliases[k]; ok {
+			switch av.(type) {
+			case *Var:
+				break
+			default:
+				if !av.compare_to(v) {
+					return true
+				}
+			}
+		}
+		aliases[k] = v
+	}
+	return false
+}
+
+func cleanUpVarsOutOfScope(to_clean Alias, scope Alias) Alias {
+
+	clean := make(Alias)
+	for k,_ := range scope {
+		var temp Term = k
+		Loop: for {
+			value, _ := to_clean[temp.(*Var)]
+			switch value.(type) {
+			case *Var:
+				temp = value
+			case Atom:
+				clean[k] = value
+				break Loop
+			case Compound_Term:
+				clean[k] = rec_substitute(value.(Compound_Term), to_clean, scope)
+				break Loop
+			}
+		}
+	}
+	fmt.Println("CLEAN", clean)
+	return clean
+}
+
+func varsInTermArgs(terms Terms) Alias {
+	vars := make(Alias)
+	for _,t := range terms {
+		switch t.(type) {
+		case *Var:
+			vars[t.(*Var)] = Atom{"NIL"}
+		case Compound_Term:
+			updateAlias(vars, varsInTermArgs(t.(Compound_Term).args))
+		}
+	}
+	return vars
 }
