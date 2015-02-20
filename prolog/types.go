@@ -1,6 +1,7 @@
 
 package prolog
 
+//TODO: 'builtin' boolean field?
 type Rule struct {
 	head Terms
 	body Terms
@@ -21,14 +22,13 @@ type Term interface {
 	ground(Alias) bool
 }
 
-//TODO: Lists.
-//type List Compound_Term
-//overwriting Term_to_string etc. Is that (elegantly) possible in Go?
-
+//TODO: Anonymous variables as Atoms with _value?
 type Atom struct {
 	value string
 }
 
+//TODO: (optimalization) Rules in memory should use Vars,
+// only make *Vars in search.createVars()
 type Var struct {
 	name string
 }
