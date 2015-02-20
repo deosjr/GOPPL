@@ -34,8 +34,9 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 		close(answer)
 		return
 	} else {
-		for _,rule := range rules {
+		for _,rule_template := range rules {
 			//fmt.Println("RULE", term.pred.functor, rule.head, rule.body)
+			rule := call_rule(rule_template)
 			new_terms := terms
 			new_alias := make(Alias)
 			for k,v := range aliases {
@@ -64,4 +65,46 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 		}
 		close(answer)
 	}
+}
+
+//TODO: for efficiency, let rule templates use Var instead of *Var ?
+func call_rule(rule Rule) Rule {
+	var_alias := make(Alias)
+	head, body := []Term{}, []Term{}
+	for _, t := range rule.head {
+		vt, var_alias := create_vars(t, var_alias)
+		var_alias = var_alias
+		head = append(head, vt)
+	}
+	for _, t := range rule.body {
+		vt, var_alias := create_vars(t, var_alias)
+		var_alias = var_alias
+		body = append(body, vt)
+	}
+	return Rule{head, body}
+}
+
+func create_vars(t Term, va Alias) (Term, Alias) {
+	switch t.(type) {
+	case *Var:
+		v := t.(*Var)
+		value, renamed := va[v]
+		if renamed {
+			return value, va
+		}
+		newv := &Var{v.name}
+		va[v] = newv
+		return newv, va
+	case Compound_Term:
+		renamed_args := []Term{}
+		c := t.(Compound_Term)
+		for _, ot := range c.args {
+			vt, va := create_vars(ot, va)
+			va = va
+			renamed_args = append(renamed_args, vt)
+		}
+		newc := Compound_Term{c.pred, renamed_args}
+		return newc, va
+	}
+	return t, va
 }

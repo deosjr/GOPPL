@@ -34,7 +34,7 @@ func Print_memory() {
 
 func Print_answer(query []Term, answer chan Alias) {
 	fmt.Printf("?- %s.\n", query[0].Term_to_string())
-	wait := false
+	wait := true
 	for alias := range answer {
 		for k,v := range alias {
 			fmt.Printf("%s = %s. ", k, v.Term_to_string())
