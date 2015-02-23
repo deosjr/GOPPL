@@ -22,11 +22,11 @@ type Term interface {
 	ground(Alias) bool
 }
 
-//TODO: Anonymous variables as Atoms with _value?
 type Atom struct {
 	value string
 }
 
+//TODO: Anonymous variables as Vars with _name?
 //TODO: (optimalization) Rules in memory should use Vars,
 // only make *Vars in search.createVars()
 type Var struct {

@@ -32,6 +32,13 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias Alias) {
 
 	newalias = make(Alias)
+	// RESERVED is an ununifyable atom
+	if atom1, ok := term1.(Atom); ok && atom1.value == "RESERVED" {
+		return false, nil
+	}
+	if atom2, ok := term2.(Atom); ok && atom2.value == "RESERVED" {
+		return false, nil
+	}
 
 	// unification of var1:
 	if var1, ok := term1.(*Var); ok {

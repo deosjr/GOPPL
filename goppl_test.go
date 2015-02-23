@@ -6,8 +6,11 @@ import (
 	"testing"
 )
 
-func evaluateQuery(t *testing.T, testAnswers []map[string]string, answer chan prolog.Alias) {
-	for _,bindings := range testAnswers {
+func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
+	stack := prolog.InitStack(query)
+	answer := make(chan prolog.Alias, 1)
+	go prolog.DFS(stack, answer)
+	for _, bindings := range testAnswers {
 		alias := <- answer
 		for k,v := range alias {
 			if _, contains := bindings[k.String()]; !contains {
@@ -33,50 +36,43 @@ func evaluateQuery(t *testing.T, testAnswers []map[string]string, answer chan pr
 
 func TestPerms(t *testing.T) {
 	query := prolog.InitPerms()
-	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
-	go prolog.DFS(stack, answer)
 	testAnswers := []map[string]string{
 		{"X":"a","Y":"a"},
 		{"X":"a","Y":"b"},
 		{"X":"b","Y":"a"},
 		{"X":"b","Y":"b"},
 	}
-	evaluateQuery(t, testAnswers, answer)
+	evaluateQuery(t, query, testAnswers)
 }
 
 func TestExample(t *testing.T) {
 	query := prolog.InitExample()
-	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
-	go prolog.DFS(stack, answer)
 	testAnswers := []map[string]string{
 		{"X":"a"},
 		{"X":"a"},
 		{"X":"b"},
 		{"X":"d"},
 	}
-	evaluateQuery(t, testAnswers, answer)
+	evaluateQuery(t, query, testAnswers)
 }
 
 func TestPeano(t *testing.T) {
 	query := prolog.InitPeano()
-	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
-	go prolog.DFS(stack, answer)
 	testAnswers := []map[string]string{
 		{"X":"s(s(s(s(s(0)))))"},
 	}
-	evaluateQuery(t, testAnswers, answer)
+	evaluateQuery(t, query, testAnswers)
 }
 
 func TestLists(t *testing.T) {
 	query := prolog.InitLists()
-	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
-	go prolog.DFS(stack, answer)
 	testAnswers := []map[string]string{
-		{"L":"[1,2,3,4,5]"},
+		{"L":"[]", "X":"[1,2,3,4,5]"},
+		{"L":"[1]", "X":"[2,3,4,5]"},
+		{"L":"[1,2]", "X":"[3,4,5]"},
+		{"L":"[1,2,3]", "X":"[4,5]"},
+		{"L":"[1,2,3,4]", "X":"[5]"},
+		{"L":"[1,2,3,4,5]", "X":"[]"},
 	}
-	evaluateQuery(t, testAnswers, answer)
+	evaluateQuery(t, query, testAnswers)
 }	

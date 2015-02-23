@@ -13,20 +13,30 @@ func ruleToMem(pred Predicate, r Rule) {
 
 //TODO: take a .pl file as input and parse
 func InitMemory() Terms {
+	InitBuiltIns()
 	return InitLists()
+}
+
+//TODO: suppress these by default when printing memory 
+func InitBuiltIns() {
+
+	// atm this is the builtin definition for prolog lists
+	// TODO: How come anon vars already seem to work?!
+	list := Predicate{"LIST",2}
+	ruleToMem(list, Rule{Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}, Terms{}})
+	empty_list := List{Compound_Term{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}
+	tlist := List{Compound_Term{list, Terms{&Var{"_"}, List{Compound_Term{list, Terms{&Var{"_"}, empty_list}}}}}}
+	ruleToMem(list, Rule{Terms{&Var{"_"}, tlist}, Terms{}})
+
 }
 
 //TODO: move to separate testfiles!
 func InitLists() Terms {
 
-	// atm this is the builtin definition for prolog lists
 	list := Predicate{"LIST",2}
-	ruleToMem(list, Rule{Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}, Terms{}})
-	tlist := List{Compound_Term{list, Terms{Atom{"_"}, List{Compound_Term{list, Terms{Atom{"_"}, List{Compound_Term{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}}}}}}}
-	ruleToMem(list, Rule{Terms{Atom{"_"}, tlist}, Terms{}})
+	empty_list := List{Compound_Term{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}
 	
 	// now lets try concatenation
-	empty_list := List{Compound_Term{list, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}
 	l := &Var{"L"}
 	ruleToMem(Predicate{"cat",3}, Rule{Terms{empty_list, l, l}, Terms{}})
 	h, t, r := &Var{"H"}, &Var{"T"}, &Var{"R"}
@@ -36,9 +46,9 @@ func InitLists() Terms {
 	ruleToMem(Predicate{"cat",3}, Rule{Terms{ht, l, hr}, Terms{reccat}})
 	
 	// query
-	l12 := List{Compound_Term{list, Terms{Atom{"1"}, List{Compound_Term{list, Terms{Atom{"2"}, empty_list}}}}}}
-	l345 := List{Compound_Term{list, Terms{Atom{"3"}, List{Compound_Term{list, Terms{Atom{"4"}, List{Compound_Term{list, Terms{Atom{"5"}, empty_list}}}}}}}}}
-	cat := Compound_Term{Predicate{"cat",3}, Terms{l12,l345,l}}
+	l12345 := List{Compound_Term{list, Terms{Atom{"1"}, List{Compound_Term{list, Terms{Atom{"2"}, List{Compound_Term{list, Terms{Atom{"3"}, List{Compound_Term{list, Terms{Atom{"4"}, List{Compound_Term{list, Terms{Atom{"5"}, empty_list}}}}}}}}}}}}}}}
+	x := &Var{"X"}
+	cat := Compound_Term{Predicate{"cat",3}, Terms{l,x,l12345}}
 	query := Terms{cat}
 	
 	return query
