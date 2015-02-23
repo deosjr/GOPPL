@@ -3,12 +3,13 @@ package main
 
 import (
 	"GOPPL/prolog"
+	"GOPPL/types"
 	"testing"
 )
 
-func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
+func evaluateQuery(t *testing.T, query types.Terms, testAnswers []map[string]string) {
 	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
+	answer := make(chan types.Alias, 1)
 	go prolog.DFS(stack, answer)
 	for _, bindings := range testAnswers {
 		alias := <- answer

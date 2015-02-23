@@ -1,57 +1,29 @@
 
 package prolog
 
-import "fmt"
-
-func (a Atom) String() string{ return a.value}
-
-func (v *Var) String() string { return v.name }
-
-func (c Compound_Term) String() string{ 
-	s := c.pred.functor + "("
-	for i,t := range c.args {
-		if i == c.pred.arity-1 {
-			s += t.String()
-			break
-		}
-		s += t.String() + ","
-	}
-	return s + ")"
-}
-
-func (tlist Terms) String() string {
-	s := "["
-	for _,t := range tlist {
-		s = s + t.String() + " "
-	}
-	return s + "]"
-} 
-
-func (a Alias) String() string {
-	s := "{"
-	for k,v := range a {
-		s = s + k.String() + ":" + v.String() + " "
-	}
-	return s + "}"
-}
+import (
+	"fmt"
+	
+	"GOPPL/types"
+)
 
 func Print_memory() {
 	for k,v := range memory {
 		for _,rule := range v {
-			fmt.Printf("%s(", k.functor)
-			for i,h := range rule.head {
-				if i == k.arity-1 {
+			fmt.Printf("%s(", k.Functor)
+			for i,h := range rule.Head {
+				if i == k.Arity-1 {
 					fmt.Printf("%s)", h.String())
 					break
 				}
 				fmt.Printf("%s,",h.String())
 			}
-			if len(rule.body) == 0 {
+			if len(rule.Body) == 0 {
 				fmt.Println(".")
 			} else {
 				fmt.Println(" :-")
-				for i,b := range rule.body {
-					if i == len(rule.body)-1 {
+				for i,b := range rule.Body {
+					if i == len(rule.Body)-1 {
 						fmt.Printf("\t%s.", b.String())
 						break
 					}
@@ -65,7 +37,7 @@ func Print_memory() {
 }
 
 // Contains the ; wait loop. Set wait=false for auto all evaluations
-func Print_answer(query []Term, answer chan Alias) {
+func Print_answer(query types.Terms, answer chan types.Alias) {
 	fmt.Printf("?- %s.\n", query[0].String())
 	wait := true//false
 	for alias := range answer {
@@ -76,8 +48,13 @@ func Print_answer(query []Term, answer chan Alias) {
 			for {
 				var response string
 				fmt.Scanln(&response)
-				if response == ";" { break }
-				if response == "a" { wait=false; break }
+				if response == ";" { 
+					break 
+				}
+				if response == "a" { 
+					wait = false
+					break 
+				}
 			}
 		}
 		fmt.Println()

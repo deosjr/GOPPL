@@ -1,15 +1,15 @@
 
-package prolog
+package types
 
 //TODO: 'builtin' boolean field?
 type Rule struct {
-	head Terms
-	body Terms
+	Head Terms
+	Body Terms
 }
 
 type Predicate struct {
-	functor string
-	arity int
+	Functor string
+	Arity int
 }
 
 type Terms []Term
@@ -23,14 +23,14 @@ type Term interface {
 }
 
 type Atom struct {
-	value string
+	Value string
 }
 
 //TODO: Anonymous variables as Vars with _name?
 //TODO: (optimalization) Rules in memory should use Vars,
 // only make *Vars in search.createVars()
 type Var struct {
-	name string
+	Name string
 }
 
 type Compound interface {
@@ -40,15 +40,15 @@ type Compound interface {
 
 // TODO: distinction between ground and unground compound terms
 type Compound_Term struct {
-	pred Predicate
-	args Terms
+	Pred Predicate
+	Args Terms
 }
 
 func (c Compound_Term) GetPredicate() Predicate {
-	return c.pred
+	return c.Pred
 }
 func (c Compound_Term) GetArgs() Terms {
-	return c.args
+	return c.Args
 }
 
 //TODO: check Equaler interface!
@@ -101,7 +101,7 @@ func (v *Var) ground(alias Alias) bool {
 }
 
 func (c Compound_Term) ground(alias Alias) bool {
-	for _,t := range c.args {
+	for _,t := range c.GetArgs() {
 		if !t.ground(alias) {
 			return false
 		}
