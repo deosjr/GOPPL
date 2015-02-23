@@ -55,7 +55,6 @@ func NewReader(r io.Reader) *Reader {
 		And : ',',
 		Stop : '.',
 		r: bufio.NewReader(r),
-		line : 1,
 		rulebase : make(prolog.Data),
 	}
 }
@@ -64,7 +63,6 @@ func (r *Reader) ReadAll() (prolog.Data, error) {
 
 	for {
 		predicate, rule, err := r.Read()
-		fmt.Println(predicate, rule)
 		if err == io.EOF {
 			return r.rulebase, nil
 		}
@@ -96,12 +94,7 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	}
 	p, _ := term.(prolog.Compound_Term)
 	
-	// TODO: no turnstile, just a Stop
-	fact, err := r.findNext(r.Stop, true)
-	if err != nil {
-		return prolog.Predicate{}, prolog.Rule{}, err
-	}
-	if fact {
+	if r.last_read == r.Stop {
 		predicate := p.GetPredicate()
 		rule := prolog.Rule{p.GetArgs(), prolog.Terms{}}
 		return predicate, rule, nil
@@ -142,13 +135,11 @@ func (r *Reader) readTurnstile() error {
 func (r *Reader) ReadTerm() (prolog.Term, error) {
 
 	r1, err := r.skipCommentsAndSpaces()
-	//fmt.Printf("START READ: %v:%c\n", r1, r1)
 	if err != nil {
 		return nil, err
 	}
 	s := []rune{}
 	for {
-		//fmt.Printf("READ: %q + %c\n", string(s), r1)
 		if err != nil {
 			return nil, err
 		}
@@ -165,16 +156,14 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 				return nil, err
 			}
 			if r.last_read != ')' {
-				fmt.Printf("LASTREAD %c \n", r.last_read)
 				ok, err := r.findNext(')', true)
-				fmt.Printf("NEXT %v %v \n", ok, err)
 				if !ok {
 					return nil, err
 				}
 			}
+			r1, err = r.readRune()	//TODO: check: consumes )?
 			predicate := prolog.Predicate{functor, len(args)}
 			compound := prolog.Compound_Term{predicate, args}
-			fmt.Printf("COMPOUND: %v \n", compound)
 			return compound, err
 		}
 		if r1 == '[' {
@@ -186,10 +175,8 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 				r1, err = r.skipCommentsAndSpaces()
 			}
 			if unicode.IsUpper(s[0]) {
-				fmt.Printf("VAR: %q \n", string(s))
 				return &prolog.Var{string(s)}, err
 			}
-			fmt.Printf("ATOM: %q \n", string(s))
 			return prolog.Atom{string(s)}, err
 		}
 		s = append(s, r1)
@@ -210,6 +197,7 @@ func (r *Reader) ReadTerms() (prolog.Terms, error) {
 		ok := r.last_read == r.And
 		if !ok && unicode.IsSpace(r.last_read) {
 			ok, err = r.findNext(r.And, true)
+			fmt.Println(ok, r.last_read)
 			if err != nil {
 				return nil, err
 			}
@@ -268,12 +256,12 @@ func (r *Reader) findNext(c rune, skip bool) (bool, error) {
 func (r *Reader) skipComment() (rune, error) {
 	for {
 		r1, err := r.readRune()
-		//fmt.Printf("COMMENT READS: %v:%c", r1, r1)
 		if err != nil {
 			return r1, err
 		}
 		if r1 == '\n' {
 			r.line++
+			r.column = -1
 			return r1, nil
 		}
 	}
@@ -282,15 +270,14 @@ func (r *Reader) skipComment() (rune, error) {
 func (r *Reader) skipCommentsAndSpaces() (rune, error) {
 
 	r1, err := r.readRune()
-	//fmt.Printf("START SKIP: %v:%c\n", r1, r1)
 	Skip:
 	for err == nil {
 		switch r1 {
 		case '\n':
 			r.line++
+			r.column = -1
 			r1, err = r.readRune()
 		case r.Comment:
-			//fmt.Printf("START COMMENT: %v:%c\n", r1, r1)
 			r1, err = r.skipComment()
 		default:
 			if unicode.IsSpace(r1) {
@@ -299,7 +286,6 @@ func (r *Reader) skipCommentsAndSpaces() (rune, error) {
 				break Skip
 			}
 		}
-		//fmt.Printf("SKIP READS: %v:%c\n", r1, r1)
 	}
 	return r1, err
 }

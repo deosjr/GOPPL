@@ -37,7 +37,11 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 //so we have one testfunction instead of 3 identical ones
 
 func TestPerms(t *testing.T) {
-	query := memory.InitPerms()
+	memory.InitFromFile("tests/permutation_test.pl")
+	memory.InitBuiltIns()
+	x,y := &prolog.Var{"X"}, &prolog.Var{"Y"}
+	h := prolog.Compound_Term{prolog.Predicate{"hardcoded2",2}, prolog.Terms{x,y}}
+	query := prolog.Terms{h}
 	testAnswers := []map[string]string{
 		{"X":"a","Y":"a"},
 		{"X":"a","Y":"b"},

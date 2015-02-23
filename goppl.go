@@ -8,10 +8,11 @@ import (
 
 func main() {	
 
-	file := "example.pl"
+	//file := "example.pl"
+	file := "tests/permutation_test.pl"
 	memory.InitFromFile(file)
 
-	query := memory.InitMemory()
+	query := memory.InitPerms()
 	
 	memory.PrintMemory()
 	

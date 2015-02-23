@@ -8,6 +8,7 @@ import (
 	t "GOPPL/prolog"	// TODO: dont alias, once all those Inits are gone!
 )
 
+//TODO: occurs check, don't allow doubles!
 func addData(pred t.Predicate, r t.Rule) {
 	if value, ok := t.Memory[pred]; ok {
 		t.Memory[pred] = append(value, r)
@@ -16,7 +17,6 @@ func addData(pred t.Predicate, r t.Rule) {
 	}
 }
 
-//TODO: take a .pl file as input and parse
 func InitFromFile(filename string) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -114,13 +114,6 @@ func InitPeano() t.Terms {
 }
 
 func InitPerms() t.Terms {
-	addData(t.Predicate{"sym",1}, t.Rule{t.Terms{t.Atom{"a"}}, t.Terms{}})
-	addData(t.Predicate{"sym",1}, t.Rule{t.Terms{t.Atom{"b"}}, t.Terms{}})
-	h1 := &t.Var{"H1"}
-	h2 := &t.Var{"H2"}
-	sym1 := t.Compound_Term{t.Predicate{"sym",1}, t.Terms{h1}}
-	sym2 := t.Compound_Term{t.Predicate{"sym",1}, t.Terms{h2}}
-	addData(t.Predicate{"hardcoded2", 2}, t.Rule{t.Terms{h1,h2}, t.Terms{sym1, sym2}})
 	x,y := &t.Var{"X"}, &t.Var{"Y"}
 	h := t.Compound_Term{t.Predicate{"hardcoded2",2}, t.Terms{x,y}}
 	query := t.Terms{h}
