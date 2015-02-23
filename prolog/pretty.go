@@ -3,41 +3,10 @@ package prolog
 
 import (
 	"fmt"
-	
-	"GOPPL/types"
 )
 
-func Print_memory() {
-	for k,v := range memory {
-		for _,rule := range v {
-			fmt.Printf("%s(", k.Functor)
-			for i,h := range rule.Head {
-				if i == k.Arity-1 {
-					fmt.Printf("%s)", h.String())
-					break
-				}
-				fmt.Printf("%s,",h.String())
-			}
-			if len(rule.Body) == 0 {
-				fmt.Println(".")
-			} else {
-				fmt.Println(" :-")
-				for i,b := range rule.Body {
-					if i == len(rule.Body)-1 {
-						fmt.Printf("\t%s.", b.String())
-						break
-					}
-					fmt.Printf("\t%s,\n",b.String())
-				}
-				fmt.Println()
-			}
-		}
-		fmt.Println()
-	}
-}
-
 // Contains the ; wait loop. Set wait=false for auto all evaluations
-func Print_answer(query types.Terms, answer chan types.Alias) {
+func PrintAnswer(query Terms, answer chan Alias) {
 	fmt.Printf("?- %s.\n", query[0].String())
 	wait := true//false
 	for alias := range answer {
@@ -60,4 +29,54 @@ func Print_answer(query types.Terms, answer chan types.Alias) {
 		fmt.Println()
 	}
 	fmt.Println("False.")
+}
+
+func (a Atom) String() string{ return a.Value}
+
+func (v *Var) String() string { return v.Name }
+
+func (c Compound_Term) String() string{ 
+	s := c.Pred.Functor + "("
+	for i,t := range c.Args {
+		if i == c.Pred.Arity-1 {
+			s += t.String()
+			break
+		}
+		s += t.String() + ","
+	}
+	return s + ")"
+}
+
+func (tlist Terms) String() string {
+	s := "["
+	for _,t := range tlist {
+		s = s + t.String() + " "
+	}
+	return s + "]"
+} 
+
+func (a Alias) String() string {
+	s := "{"
+	for k,v := range a {
+		s = s + k.String() + ":" + v.String() + " "
+	}
+	return s + "}"
+}
+
+func (l List) String() string{ 
+	if l.isEmpty() {
+		return "[]"
+	}
+	tail := l.tail()
+	switch tail.(type){
+	case List:
+		ltail := tail.(List)
+		if ltail.isEmpty() {
+			return "[" + l.head().String() + "]"
+		}
+		rec := ltail.String()
+		return  "[" + l.head().String() + "," + rec[1:len(rec)-1] + "]"
+	}
+	// TODO: doesnt take into account var X halfway string thats otherwise grounded
+	return  "[" + l.head().String() + "|" + tail.String() + "]"
 }

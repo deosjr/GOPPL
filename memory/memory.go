@@ -1,19 +1,18 @@
 
-package prolog
+package memory
 
 import (
+	"fmt"
 	"os"
-	"GOPPL/parser"
-	t "GOPPL/types"
+	
+	t "GOPPL/prolog"	// TODO: dont alias, once all those Inits are gone!
 )
 
-var memory map[t.Predicate][]t.Rule = make(map[t.Predicate][]t.Rule)
-
 func ruleToMem(pred t.Predicate, r t.Rule) {
-	if value, ok := memory[pred]; ok {
-		memory[pred] = append(value, r)
+	if value, ok := t.Memory[pred]; ok {
+		t.Memory[pred] = append(value, r)
 	} else {
-		memory[pred] = []t.Rule{r}
+		t.Memory[pred] = []t.Rule{r}
 	}
 }
 
@@ -25,7 +24,7 @@ func InitFromFile(filename string) {
 	}
 	defer f.Close()
 	
-	reader := parser.NewReader(f)
+	reader := NewReader(f)
 	reader.Read()
 }
 
@@ -139,4 +138,33 @@ func InitExample() t.Terms {
 	px := t.Compound_Term{t.Predicate{"p",1}, t.Terms{x}}
 	query := t.Terms{px}
 	return query
+}
+
+func PrintMemory() {
+	for k,v := range t.Memory {
+		for _,rule := range v {
+			fmt.Printf("%s(", k.Functor)
+			for i,h := range rule.Head {
+				if i == k.Arity-1 {
+					fmt.Printf("%s)", h.String())
+					break
+				}
+				fmt.Printf("%s,",h.String())
+			}
+			if len(rule.Body) == 0 {
+				fmt.Println(".")
+			} else {
+				fmt.Println(" :-")
+				for i,b := range rule.Body {
+					if i == len(rule.Body)-1 {
+						fmt.Printf("\t%s.", b.String())
+						break
+					}
+					fmt.Printf("\t%s,\n",b.String())
+				}
+				fmt.Println()
+			}
+		}
+		fmt.Println()
+	}
 }

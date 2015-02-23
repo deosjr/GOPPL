@@ -1,5 +1,5 @@
 
-package types
+package prolog
 
 //TODO: 'builtin' boolean field?
 type Rule struct {

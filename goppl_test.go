@@ -2,14 +2,15 @@
 package main
 
 import (
-	"GOPPL/prolog"
-	"GOPPL/types"
 	"testing"
+
+	"GOPPL/memory"
+	"GOPPL/prolog"
 )
 
-func evaluateQuery(t *testing.T, query types.Terms, testAnswers []map[string]string) {
+func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
 	stack := prolog.InitStack(query)
-	answer := make(chan types.Alias, 1)
+	answer := make(chan prolog.Alias, 1)
 	go prolog.DFS(stack, answer)
 	for _, bindings := range testAnswers {
 		alias := <- answer
@@ -36,7 +37,7 @@ func evaluateQuery(t *testing.T, query types.Terms, testAnswers []map[string]str
 //so we have one testfunction instead of 3 identical ones
 
 func TestPerms(t *testing.T) {
-	query := prolog.InitPerms()
+	query := memory.InitPerms()
 	testAnswers := []map[string]string{
 		{"X":"a","Y":"a"},
 		{"X":"a","Y":"b"},
@@ -47,7 +48,7 @@ func TestPerms(t *testing.T) {
 }
 
 func TestExample(t *testing.T) {
-	query := prolog.InitExample()
+	query := memory.InitExample()
 	testAnswers := []map[string]string{
 		{"X":"a"},
 		{"X":"a"},
@@ -58,7 +59,7 @@ func TestExample(t *testing.T) {
 }
 
 func TestPeano(t *testing.T) {
-	query := prolog.InitPeano()
+	query := memory.InitPeano()
 	testAnswers := []map[string]string{
 		{"X":"s(s(s(s(s(0)))))"},
 	}
@@ -66,7 +67,7 @@ func TestPeano(t *testing.T) {
 }
 
 func TestLists(t *testing.T) {
-	query := prolog.InitLists()
+	query := memory.InitLists()
 	testAnswers := []map[string]string{
 		{"L":"[]", "X":"[1,2,3,4,5]"},
 		{"L":"[1]", "X":"[2,3,4,5]"},

@@ -2,23 +2,23 @@
 package main
 
 import (
+	"GOPPL/memory"
 	"GOPPL/prolog"
-	"GOPPL/types"
 )
 
 func main() {	
 
 	file := "example.pl"
-	prolog.InitFromFile(file)
+	memory.InitFromFile(file)
 
-	query := prolog.InitMemory()
+	query := memory.InitMemory()
 	
-	prolog.Print_memory()
+	memory.PrintMemory()
 	
 	stack := prolog.InitStack(query)
-	answer := make(chan types.Alias, 1)
+	answer := make(chan prolog.Alias, 1)
 	go prolog.DFS(stack, answer)
 	
-	prolog.Print_answer(query, answer)
+	prolog.PrintAnswer(query, answer)
 
 }

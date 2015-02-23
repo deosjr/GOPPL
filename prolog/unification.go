@@ -1,9 +1,9 @@
 
-package types
+package prolog
 
 //import "fmt"
 
-func Unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Alias) {
+func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Alias) {
 
 	newalias = make(Alias)
 	for k,v := range aliases {
@@ -20,7 +20,7 @@ func Unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 			//fmt.Println("TERMS DONT UNIFY")
 			return false, nil
 		}
-		clash := UpdateAlias(newalias, al)
+		clash := updateAlias(newalias, al)
 		if clash {
 			//fmt.Println("CLASH FROM UNIFY", newalias, al)
 			return false, nil
@@ -76,12 +76,12 @@ func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias A
 		return false, nil
 	// unification of two compound terms
 	} else if c1, c2 := term1.(Compound), term2.(Compound); c1.GetPredicate() == c2.GetPredicate() {
-		return Unify(c1.GetArgs(), c2.GetArgs(), aliases)
+		return unify(c1.GetArgs(), c2.GetArgs(), aliases)
 	}
 	return false, nil
 }
 
-func UpdateAlias(aliases Alias, updates Alias) (clash bool) {
+func updateAlias(aliases Alias, updates Alias) (clash bool) {
 
 	for k,v := range updates {
 		if av, ok := aliases[k]; ok {

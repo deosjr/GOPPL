@@ -1,5 +1,5 @@
 
-package types
+package prolog
 
 // List Predicate = {"LIST", 2}
 type List struct {
