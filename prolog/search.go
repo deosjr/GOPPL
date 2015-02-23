@@ -1,7 +1,9 @@
 
 package prolog
 
-var Memory map[Predicate][]Rule = make(map[Predicate][]Rule)
+type Data map[Predicate][]Rule
+
+var Memory Data = make(Data)
 
 // newest item in stack at termlist[len-1] (->)
 type Stack_Item struct {
