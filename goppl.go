@@ -1,40 +1,40 @@
-
 package main
 
 import (
 	"strings"
 	
-	"fmt"
-
 	"GOPPL/memory"
 	"GOPPL/prolog"
+	
 )
 
-func main() {	
+func main() {
 
 	file := "example.pl"
 	memory.InitFromFile(file)
 	memory.InitBuiltIns()
-
-	// TODO: query int(X) to peano_test has broken!
+	
+	// TODO: query int(X) at peano kicks off infinite go routines
+	//		 this is not very efficient
+	// TODO: multi-term queries: int(X), int(Y).
+	// 		 Right now only Y is in scope in answer
 	query := parseQuery("int(X).")
-	fmt.Println(query)
-	
+
 	memory.PrintMemory()
-	
+
 	stack := prolog.InitStack(query)
 	answer := make(chan prolog.Alias, 1)
 	go prolog.DFS(stack, answer)
-	
+
 	prolog.PrintAnswer(query, answer)
 
 }
 
 func parseQuery(q string) prolog.Terms {
-	
+
 	s := strings.NewReader(q)
 	reader := memory.NewReader(s)
-	
+
 	terms, err := reader.ReadTerms()
 	if err != nil {
 		panic(err)
@@ -50,5 +50,5 @@ func parseQuery(q string) prolog.Terms {
 		panic(reader.ThrowError(memory.ErrQueryError))
 	}
 	return query
-	
+
 }

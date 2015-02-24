@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -13,8 +12,8 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 	answer := make(chan prolog.Alias, 1)
 	go prolog.DFS(stack, answer)
 	for _, bindings := range testAnswers {
-		alias := <- answer
-		for k,v := range alias {
+		alias := <-answer
+		for k, v := range alias {
 			if _, contains := bindings[k.String()]; !contains {
 				t.Errorf("Out of scope variable %s in alias", k.String())
 			} else if v.String() != bindings[k.String()] {
@@ -32,20 +31,15 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 	}
 }
 
-//TODO: when parsing is functioning,
-//make a table driven test using filename,expected_answers
-//so we have one testfunction instead of 3 identical ones
-//TODO: parse queries instead of constructing them
-
 func TestPerms(t *testing.T) {
 	memory.InitFromFile("tests/permutation_test.pl")
 	memory.InitBuiltIns()
 	query := parseQuery("hardcoded2(X,Y).")
 	testAnswers := []map[string]string{
-		{"X":"a","Y":"a"},
-		{"X":"a","Y":"b"},
-		{"X":"b","Y":"a"},
-		{"X":"b","Y":"b"},
+		{"X": "a", "Y": "a"},
+		{"X": "a", "Y": "b"},
+		{"X": "b", "Y": "a"},
+		{"X": "b", "Y": "b"},
 	}
 	evaluateQuery(t, query, testAnswers)
 }
@@ -55,10 +49,10 @@ func TestExample(t *testing.T) {
 	memory.InitBuiltIns()
 	query := parseQuery("p(X).")
 	testAnswers := []map[string]string{
-		{"X":"a"},
-		{"X":"a"},
-		{"X":"b"},
-		{"X":"d"},
+		{"X": "a"},
+		{"X": "a"},
+		{"X": "b"},
+		{"X": "d"},
 	}
 	evaluateQuery(t, query, testAnswers)
 }
@@ -68,7 +62,7 @@ func TestPeano(t *testing.T) {
 	memory.InitBuiltIns()
 	query := parseQuery("sum(s(s(0)), s(s(s(0))), X).")
 	testAnswers := []map[string]string{
-		{"X":"s(s(s(s(s(0)))))"},
+		{"X": "s(s(s(s(s(0)))))"},
 	}
 	evaluateQuery(t, query, testAnswers)
 }
@@ -78,12 +72,12 @@ func TestLists(t *testing.T) {
 	memory.InitBuiltIns()
 	query := parseQuery("cat(L, X, [1,2,3,4,5]).")
 	testAnswers := []map[string]string{
-		{"L":"[]", "X":"[1,2,3,4,5]"},
-		{"L":"[1]", "X":"[2,3,4,5]"},
-		{"L":"[1,2]", "X":"[3,4,5]"},
-		{"L":"[1,2,3]", "X":"[4,5]"},
-		{"L":"[1,2,3,4]", "X":"[5]"},
-		{"L":"[1,2,3,4,5]", "X":"[]"},
+		{"L": "[]", "X": "[1,2,3,4,5]"},
+		{"L": "[1]", "X": "[2,3,4,5]"},
+		{"L": "[1,2]", "X": "[3,4,5]"},
+		{"L": "[1,2,3]", "X": "[4,5]"},
+		{"L": "[1,2,3,4]", "X": "[5]"},
+		{"L": "[1,2,3,4,5]", "X": "[]"},
 	}
 	evaluateQuery(t, query, testAnswers)
-}	
+}

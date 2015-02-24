@@ -17,7 +17,6 @@ func InitStack(query Terms) Stack_Item {
 }
 
 func DFS(stack_item Stack_Item, answer chan Alias) {
-	// for now, assume no parallellism
 	
 	terms, aliases := stack_item.termlist, stack_item.aliases
 	if len(terms) == 0 {
@@ -114,7 +113,6 @@ func CreateVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term)
 	return term, va
 }
 
-//TODO: Loops when memory is read from file?
 func cleanUpVarsOutOfScope(to_clean Alias, scope []*Var) Alias {
 
 	clean := make(Alias)

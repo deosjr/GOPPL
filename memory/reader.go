@@ -133,6 +133,8 @@ func (r *Reader) readTurnstile() error {
 }
 
 // ReadTerm returns one Term
+// TODO: inline operators =, \=, is, etc
+// as Term Op Term -> Op(Term, Term)
 func (r *Reader) ReadTerm() (prolog.Term, error) {
 
 	r1, err := r.skipCommentsAndSpaces()
@@ -233,7 +235,7 @@ func (r *Reader) readList() (prolog.Term, error) {
 	switch r.Last_Read {
 	case ']':
 		_, err = r.readRune()
-		return createList(args, prolog.Empty_List), err
+		return prolog.CreateList(args, prolog.Empty_List), err
 	case '|':
 		tail, err := r.ReadTerm()
 		if err != nil {
@@ -243,19 +245,11 @@ func (r *Reader) readList() (prolog.Term, error) {
 			return nil, r.ThrowError(ErrSyntaxError)
 		}
 		_, err = r.readRune()
-		return createList(args, tail), err
+		return prolog.CreateList(args, tail), err
 	default:
 		return nil, r.ThrowError(ErrSyntaxError)
 	}
 	return nil, err
-}
-
-func createList(heads prolog.Terms, tail prolog.Term) prolog.Term {
-	list := tail
-	for i := len(heads)-1; i >= 0; i-- {
-		list = prolog.List{prolog.Compound_Term{prolog.Predicate{"LIST",2}, prolog.Terms{heads[i], list}}}
-	}
-	return list
 }
 
 func (r *Reader) readAtomVar(s []rune, err error) (prolog.Term, error) {

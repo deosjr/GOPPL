@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"os"
 	
-	t "GOPPL/prolog"	// TODO: dont alias, once all those Inits are gone!
+	"GOPPL/prolog"
 )
 
 //TODO: occurs check, don't allow doubles!
-func addData(pred t.Predicate, r t.Rule) {
-	if value, ok := t.Memory[pred]; ok {
-		t.Memory[pred] = append(value, r)
+func addData(pred prolog.Predicate, r prolog.Rule) {
+	if value, ok := prolog.Memory[pred]; ok {
+		prolog.Memory[pred] = append(value, r)
 	} else {
-		t.Memory[pred] = []t.Rule{r}
+		prolog.Memory[pred] = []prolog.Rule{r}
 	}
 }
 
@@ -40,27 +40,33 @@ func InitFromFile(filename string) {
 //TODO: suppress these by default when printing memory 
 func InitBuiltIns() {
 
-	x := &t.Var{"X"}
+	x := prolog.VarTemplate{"X"}
+	anon := prolog.VarTemplate{"_"}
 
 	//TODO:
 	//	not/1
 	//	is/2 as IS
 	//	\=/2 as not(UNIFY)
 	
-	//	=/2 as UNIFY
-	addData(t.Predicate{"UNIFY",2}, t.Rule{t.Terms{x, x}, t.Terms{}})
+	//	=/2 as UNIFY(X,X)
+	addData(prolog.Predicate{"UNIFY",2}, prolog.Rule{prolog.Terms{x, x}, prolog.Terms{}})
 
-	// Lists as LIST/2 using t.Atom EMPTYLIST as [] and RESERVED as end of list
-	// TODO: How come anon t.Vars already seem to work?!
-	list := t.Predicate{"LIST",2}
-	addData(list, t.Rule{t.Terms{t.Atom{"EMPTYLIST"}, t.Atom{"RESERVED"}}, t.Terms{}})
-	tlist := t.List{t.Compound_Term{list, t.Terms{&t.Var{"_"}, t.List{t.Compound_Term{list, t.Terms{&t.Var{"_"}, t.Empty_List}}}}}}
-	addData(list, t.Rule{t.Terms{&t.Var{"_"}, tlist}, t.Terms{}})
+	// Lists as LIST/2 using prolog.Atom EMPTYLIST as [] and RESERVED as end of list
+	// TODO: How come anon vars already seem to work?!
+	//		 They don't, you don't ask for a variable list, just use to check
+	list := prolog.Predicate{"LIST",2}
+	
+	// LIST([], RESERVED)
+	addData(list, prolog.Rule{prolog.Terms{prolog.Atom{"EMPTYLIST"}, prolog.Atom{"RESERVED"}}, prolog.Terms{}})
+	
+	// LIST(_, LIST(_,_))
+	tlist := prolog.CreateList(prolog.Terms{anon, anon}, prolog.Empty_List)
+	addData(list, prolog.Rule{prolog.Terms{anon, tlist}, prolog.Terms{}})
 
 }
 
 func PrintMemory() {
-	for k,v := range t.Memory {
+	for k,v := range prolog.Memory {
 		for _,rule := range v {
 			fmt.Printf("%s(", k.Functor)
 			for i,h := range rule.Head {

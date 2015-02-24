@@ -34,3 +34,11 @@ func (l List) isEmpty() bool {
 	return false
 }
 
+func CreateList(heads Terms, tail Term) Term {
+	list := tail
+	for i := len(heads)-1; i >= 0; i-- {
+		list = List{Compound_Term{Predicate{"LIST",2}, Terms{heads[i], list}}}
+	}
+	return list
+}
+

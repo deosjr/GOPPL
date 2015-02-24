@@ -2,15 +2,15 @@
 %% PEANO
 
 int(0).
-int(s(M)) :- sum(N,M,K).
+int(s(M)) :- int(M).
 	
 sum(0, M, M).
 sum(s(N),M,s(K)) :-
 	sum(N,M,K).
 	
-%int(0) .								% Stop not immediately following is a syntax error atm	
+%int(0) .								% Stop not immediately following is a syntax error
 	
-%whyWouldYou(X) :- int(X). DoThis(0).	% Newlines are ignored! Parser cant handle this right now
+whyWouldYou(X) :- int(X). doThis(0).	% Newlines are ignored, no problem.
 %zeroArguments.							% For now, all rules start with a compound term
 
 cat([], L, L).
