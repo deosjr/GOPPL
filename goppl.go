@@ -10,10 +10,11 @@ import (
 	"GOPPL/prolog"
 )
 
-// TODO: query int(X) at peano kicks off infinite go routines
+// TODO: query int(X) to Peano kicks off infinite go routines
 //		 this is not very efficient
 // TODO: multi-term queries: int(X), int(Y).
 // 		 Right now only Y is in scope in answer
+// TODO: query cat([1],[2],X) to Lists gives False?
 
 func main() {
 
@@ -69,7 +70,7 @@ func REPL() {
 		var input string
 		fmt.Scanln(&input)
 		//TODO: parse something other than query, such as exit/1
-		//		or [filename] to load a file
+		//		or [filename] to load a file (rather consult/1)
 		//memory.PrintMemory()	// TODO: parse listing/1
 		
 		query := parseQuery(input)
@@ -78,24 +79,24 @@ func REPL() {
 		go prolog.DFS(stack, answer)
 		
 		wait := true
-		WAIT:
+		ANSWERS:
 		for alias := range answer {
 			for k,v := range alias {
 				fmt.Printf("%s = %s. ", k, v.String())
 			}
 			if wait {
+				WAIT:
 				for {
 					var response string
 					fmt.Scanln(&response)
-					if response == ";" { 
-						break 
-					}
-					if response == "a" { 
-						wait = false
-						break 
-					}
-					if response == "q" {
+					switch response {
+					case ";": 
 						break WAIT
+					case "a":
+						wait = false
+						break WAIT
+					case "q":
+						break ANSWERS
 					}
 				}
 			}

@@ -186,7 +186,6 @@ func (r *Reader) ReadTerms() (prolog.Terms, error) {
 		ok := r.Last_Read == r.And
 		if !ok && unicode.IsSpace(r.Last_Read) {
 			ok, err = r.findNext(r.And, true)
-			fmt.Println(ok, r.Last_Read)
 			if err != nil {
 				return nil, err
 			}
