@@ -52,7 +52,11 @@ func TestPerms(t *testing.T) {
 }
 
 func TestExample(t *testing.T) {
-	query := memory.InitExample()
+	memory.InitFromFile("tests/example_test.pl")
+	memory.InitBuiltIns()
+	qx := &prolog.Var{"X"}
+	px := prolog.Compound_Term{prolog.Predicate{"p",1}, prolog.Terms{qx}}
+	query := prolog.Terms{px}
 	testAnswers := []map[string]string{
 		{"X":"a"},
 		{"X":"a"},
@@ -63,7 +67,15 @@ func TestExample(t *testing.T) {
 }
 
 func TestPeano(t *testing.T) {
-	query := memory.InitPeano()
+	memory.InitFromFile("tests/peano_test.pl")
+	memory.InitBuiltIns()
+	s := prolog.Predicate{"s",1}
+	x := &prolog.Var{"X"}
+	//query := prolog.Terms{prolog.Compound_Term{prolog.Predicate{"int",1}, prolog.Terms{x}}}
+	s2 := prolog.Compound_Term{s, prolog.Terms{prolog.Compound_Term{s, prolog.Terms{prolog.Atom{"0"}}}}}
+	s3 := prolog.Compound_Term{s, prolog.Terms{prolog.Compound_Term{s, prolog.Terms{prolog.Compound_Term{s, prolog.Terms{prolog.Atom{"0"}}}}}}}
+	sum := prolog.Compound_Term{prolog.Predicate{"sum",3}, prolog.Terms{s2,s3,x}}
+	query := prolog.Terms{sum}
 	testAnswers := []map[string]string{
 		{"X":"s(s(s(s(s(0)))))"},
 	}

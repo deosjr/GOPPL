@@ -1,8 +1,6 @@
 
 package prolog
 
-//import "fmt"
-
 func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Alias) {
 
 	newalias = make(Alias)
@@ -17,12 +15,10 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 	for i := 0; i < len(args1); i++ {
 		unifies, al := unify_term(args1[i], args2[i], aliases)
 		if !unifies {
-			//fmt.Println("TERMS DONT UNIFY")
 			return false, nil
 		}
 		clash := updateAlias(newalias, al)
 		if clash {
-			//fmt.Println("CLASH FROM UNIFY", newalias, al)
 			return false, nil
 		}
 	}

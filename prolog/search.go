@@ -44,7 +44,7 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 				new_alias[k] = v
 				scope = append(scope, k)
 			}
-			scope = append(arrangeVarsByDepth(scope), varsInTermArgs(term.GetArgs())...)
+			scope = append(scope, varsInTermArgs(term.GetArgs())...)
 			unifies, al := unify(term.GetArgs(), rule.Head, new_alias)
 			if !unifies {
 				continue
@@ -68,9 +68,8 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 	}
 }
 
-//TODO: for efficiency, let rule templates use Var instead of *Var ?
 func callRule(rule Rule) Rule {
-	var_alias := make(Alias)
+	var_alias := make(map[VarTemplate]Term)
 	head, body := Terms{}, Terms{}
 	for _, term := range rule.Head {
 		vt, var_alias := createVars(term, var_alias)
@@ -85,10 +84,10 @@ func callRule(rule Rule) Rule {
 	return Rule{head, body}
 }
 
-func createVars(term Term, va Alias) (Term, Alias) {
+func createVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
 	switch term.(type) {
-	case *Var:
-		v := term.(*Var)
+	case VarTemplate:
+		v := term.(VarTemplate)
 		value, renamed := va[v]
 		if renamed {
 			return value, va
@@ -116,13 +115,17 @@ func createVars(term Term, va Alias) (Term, Alias) {
 	return term, va
 }
 
+//TODO: Loops when memory is read from file?
 func cleanUpVarsOutOfScope(to_clean Alias, scope []*Var) Alias {
 
 	clean := make(Alias)
-	for _, v := range scope {
+	for _, v := range scope {	
 		temp := v
 		Loop: for {
-			value, _ := to_clean[temp]
+			value, ok := to_clean[temp]
+			if !ok {
+				break
+			}
 			switch value.(type) {
 			case *Var:
 				temp = value.(*Var)
@@ -198,11 +201,6 @@ func varsInTermArgs(terms Terms) []*Var {
 		}
 	}
 	return vars
-}
-
-// TODO: arrange vars in scope by depth, then range from high depth to low
-func arrangeVarsByDepth(scope []*Var) []*Var {
-	return scope
 }
 
 func inScope(v *Var, scope []*Var) bool {

@@ -27,9 +27,11 @@ type Atom struct {
 }
 
 //TODO: Anonymous variables as Vars with _name?
-//TODO: (optimalization) Rules in memory should use Vars,
-// only make *Vars in search.createVars()
 type Var struct {
+	Name string
+}
+
+type VarTemplate struct {
 	Name string
 }
 
@@ -86,14 +88,22 @@ func (c Compound_Term) compare_to(t Term) bool {
 	return false
 }
 
+func (v VarTemplate) compare_to(t Term) bool {
+	switch t.(type) {
+	case VarTemplate:
+		return v.Name == t.(VarTemplate).Name
+	}
+	return false
+}
+
 func (a Atom) ground(alias Alias) bool {
 	return true
 }
 
 // Grounded Var is bound to Atom or Compound_Term
 // TODO: Groundedness of Compound doesnt matter right now. Should it?
-func (v *Var) ground(alias Alias) bool {
-	if value,contains := alias[v]; contains {
+func (v Var) ground(alias Alias) bool {
+	if value,contains := alias[&v]; contains {
 		_,ok := value.(*Var)
 		return !ok
 	}
@@ -106,5 +116,9 @@ func (c Compound_Term) ground(alias Alias) bool {
 			return false
 		}
 	}
+	return true
+}
+
+func (v VarTemplate) ground(alias Alias) bool {
 	return true
 }

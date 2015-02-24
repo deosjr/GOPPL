@@ -34,6 +34,7 @@ func PrintAnswer(query Terms, answer chan Alias) {
 func (a Atom) String() string{ return a.Value}
 
 func (v *Var) String() string { return v.Name }
+func (v VarTemplate) String() string { return v.Name }
 
 func (c Compound_Term) String() string{ 
 	s := c.Pred.Functor + "("

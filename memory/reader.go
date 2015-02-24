@@ -175,7 +175,7 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 				r1, err = r.skipCommentsAndSpaces()
 			}
 			if unicode.IsUpper(s[0]) {
-				return &prolog.Var{string(s)}, err
+				return prolog.VarTemplate{string(s)}, err
 			}
 			return prolog.Atom{string(s)}, err
 		}

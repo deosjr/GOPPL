@@ -9,10 +9,11 @@ import (
 func main() {	
 
 	//file := "example.pl"
-	file := "tests/permutation_test.pl"
+	file := "tests/lists_test.pl"
 	memory.InitFromFile(file)
+	memory.InitBuiltIns()
 
-	query := memory.InitPerms()
+	query := memory.InitLists()
 	
 	memory.PrintMemory()
 	
