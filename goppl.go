@@ -1,32 +1,40 @@
 package main
 
 import (
+	"flag"
+	"fmt"
+	"path/filepath"
 	"strings"
 	
 	"GOPPL/memory"
 	"GOPPL/prolog"
-	
 )
+
+// TODO: query int(X) at peano kicks off infinite go routines
+//		 this is not very efficient
+// TODO: multi-term queries: int(X), int(Y).
+// 		 Right now only Y is in scope in answer
 
 func main() {
 
-	file := "example.pl"
-	memory.InitFromFile(file)
-	memory.InitBuiltIns()
+	var file string
+	flag.StringVar(&file, "f", "", "-f=.pl or .pro file")
+	flag.Parse()
 	
-	// TODO: query int(X) at peano kicks off infinite go routines
-	//		 this is not very efficient
-	// TODO: multi-term queries: int(X), int(Y).
-	// 		 Right now only Y is in scope in answer
-	query := parseQuery("int(X).")
-
-	memory.PrintMemory()
-
-	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
-	go prolog.DFS(stack, answer)
-
-	prolog.PrintAnswer(query, answer)
+	if file == "" {
+		memory.InitBuiltIns()
+		REPL()
+		return
+	}
+	
+	if filepath.Ext(file) != ".pl" && filepath.Ext(file) != ".pro"{
+		fmt.Println("Input a valid Prolog filename.")
+		return
+	}
+	
+	memory.InitBuiltIns()
+	memory.InitFromFile(file)
+	REPL()
 
 }
 
@@ -36,6 +44,7 @@ func parseQuery(q string) prolog.Terms {
 	reader := memory.NewReader(s)
 
 	terms, err := reader.ReadTerms()
+	// TODO: recover from syntax error in query (err == io.EOF)
 	if err != nil {
 		panic(err)
 	}
@@ -51,4 +60,48 @@ func parseQuery(q string) prolog.Terms {
 	}
 	return query
 
+}
+
+func REPL() {
+
+	for {
+		fmt.Print("?- ")
+		var input string
+		fmt.Scanln(&input)
+		//TODO: parse something other than query, such as exit/1
+		//		or [filename] to load a file
+		//memory.PrintMemory()	// TODO: parse listing/1
+		
+		query := parseQuery(input)
+		stack := prolog.InitStack(query)
+		answer := make(chan prolog.Alias, 1)
+		go prolog.DFS(stack, answer)
+		
+		wait := true
+		WAIT:
+		for alias := range answer {
+			for k,v := range alias {
+				fmt.Printf("%s = %s. ", k, v.String())
+			}
+			if wait {
+				for {
+					var response string
+					fmt.Scanln(&response)
+					if response == ";" { 
+						break 
+					}
+					if response == "a" { 
+						wait = false
+						break 
+					}
+					if response == "q" {
+						break WAIT
+					}
+				}
+			}
+			fmt.Println()
+		}
+		fmt.Println("False.")
+	
+	}
 }

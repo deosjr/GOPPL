@@ -1,36 +1,6 @@
 
 package prolog
 
-import (
-	"fmt"
-)
-
-// Contains the ; wait loop. Set wait=false for auto all evaluations
-func PrintAnswer(query Terms, answer chan Alias) {
-	fmt.Printf("?- %s.\n", query[0].String())
-	wait := true//false
-	for alias := range answer {
-		for k,v := range alias {
-			fmt.Printf("%s = %s. ", k, v.String())
-		}
-		if wait {
-			for {
-				var response string
-				fmt.Scanln(&response)
-				if response == ";" { 
-					break 
-				}
-				if response == "a" { 
-					wait = false
-					break 
-				}
-			}
-		}
-		fmt.Println()
-	}
-	fmt.Println("False.")
-}
-
 func (a Atom) String() string{ return a.Value}
 
 func (v *Var) String() string { return v.Name }
