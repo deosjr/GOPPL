@@ -67,9 +67,9 @@ func InitLists() t.Terms {
 	empty_list := t.List{t.Compound_Term{list, t.Terms{t.Atom{"EMPTYLIST"}, t.Atom{"RESERVED"}}}}
 	
 	// now lets try concatenation
-	l := &t.Var{"L"}
+	l := t.VarTemplate{"L"}
 	addData(t.Predicate{"cat",3}, t.Rule{t.Terms{empty_list, l, l}, t.Terms{}})
-	h, tail, r := &t.Var{"H"}, &t.Var{"T"}, &t.Var{"R"}
+	h, tail, r := t.VarTemplate{"H"}, t.VarTemplate{"T"}, t.VarTemplate{"R"}
 	ht := t.List{t.Compound_Term{list, t.Terms{h, tail}}}
 	hr  := t.List{t.Compound_Term{list, t.Terms{h, r}}}
 	reccat := t.Compound_Term{t.Predicate{"cat",3}, t.Terms{tail,l,r}}
@@ -77,8 +77,9 @@ func InitLists() t.Terms {
 	
 	// query
 	l12345 := t.List{t.Compound_Term{list, t.Terms{t.Atom{"1"}, t.List{t.Compound_Term{list, t.Terms{t.Atom{"2"}, t.List{t.Compound_Term{list, t.Terms{t.Atom{"3"}, t.List{t.Compound_Term{list, t.Terms{t.Atom{"4"}, t.List{t.Compound_Term{list, t.Terms{t.Atom{"5"}, empty_list}}}}}}}}}}}}}}}
+	lx := &t.Var{"L"}
 	x := &t.Var{"X"}
-	cat := t.Compound_Term{t.Predicate{"cat",3}, t.Terms{l,x,l12345}}
+	cat := t.Compound_Term{t.Predicate{"cat",3}, t.Terms{lx,x,l12345}}
 	query := t.Terms{cat}
 	
 	return query

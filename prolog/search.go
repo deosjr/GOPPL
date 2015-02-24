@@ -18,7 +18,6 @@ func InitStack(query Terms) Stack_Item {
 
 func DFS(stack_item Stack_Item, answer chan Alias) {
 	// for now, assume no parallellism
-	// and only compound terms (no =, is etc)
 	
 	terms, aliases := stack_item.termlist, stack_item.aliases
 	if len(terms) == 0 {
