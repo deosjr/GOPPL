@@ -71,19 +71,19 @@ func callRule(rule Rule) Rule {
 	var_alias := make(map[VarTemplate]Term)
 	head, body := Terms{}, Terms{}
 	for _, term := range rule.Head {
-		vt, var_alias := createVars(term, var_alias)
+		vt, var_alias := CreateVars(term, var_alias)
 		var_alias = var_alias
 		head = append(head, vt)
 	}
 	for _, term := range rule.Body {
-		vt, var_alias := createVars(term, var_alias)
+		vt, var_alias := CreateVars(term, var_alias)
 		var_alias = var_alias
 		body = append(body, vt)
 	}
 	return Rule{head, body}
 }
 
-func createVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
+func CreateVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
 	switch term.(type) {
 	case VarTemplate:
 		v := term.(VarTemplate)
@@ -98,7 +98,7 @@ func createVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term)
 		renamed_args := Terms{}
 		c := term.(Compound)
 		for _, ot := range c.GetArgs() {
-			vt, va := createVars(ot, va)
+			vt, va := CreateVars(ot, va)
 			va = va
 			renamed_args = append(renamed_args, vt)
 		}

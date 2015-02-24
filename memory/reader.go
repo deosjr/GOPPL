@@ -27,9 +27,10 @@ func (e *ParseError) Error() string {
 var (
 	// TODO: meaningful errors
 	ErrSyntaxError = errors.New("syntax error")
+	ErrQueryError = errors.New("syntax error in query")
 )
 
-func (r *Reader) error(err error) error {
+func (r *Reader) ThrowError(err error) error {
 	return &ParseError {
 		Line: r.line,
 		Column: r.column,
@@ -43,7 +44,7 @@ type Reader struct {
 	Stop rune
 	line int
 	column int
-	last_read rune
+	Last_Read rune
 	r *bufio.Reader
 	rulebase map[prolog.Predicate][]prolog.Rule
 }
@@ -84,7 +85,7 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	}	
 	// TODO: expand this simple check
 	if r1 == '[' {
-		return prolog.Predicate{}, prolog.Rule{}, r.error(ErrSyntaxError)
+		return prolog.Predicate{}, prolog.Rule{}, r.ThrowError(ErrSyntaxError)
 	}
 	r.r.UnreadRune()
 
@@ -94,7 +95,7 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	}
 	p, _ := term.(prolog.Compound_Term)
 	
-	if r.last_read == r.Stop {
+	if r.Last_Read == r.Stop {
 		predicate := p.GetPredicate()
 		rule := prolog.Rule{p.GetArgs(), prolog.Terms{}}
 		return predicate, rule, nil
@@ -109,7 +110,7 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	if err != nil {
 		return prolog.Predicate{}, prolog.Rule{}, err
 	}
-	if r.last_read != r.Stop {
+	if r.Last_Read != r.Stop {
 		ok, err := r.findNext(r.Stop, true)
 		if !ok {
 			return prolog.Predicate{}, prolog.Rule{}, err
@@ -123,10 +124,10 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 
 func (r *Reader) readTurnstile() error {
 	if ok, err := r.findNext(':', true); !ok || err != nil {
-		return r.error(ErrSyntaxError)
+		return r.ThrowError(ErrSyntaxError)
 	}
 	if ok, err := r.findNext('-', false); !ok || err != nil {
-		return r.error(ErrSyntaxError)
+		return r.ThrowError(ErrSyntaxError)
 	}
 	return nil
 }
@@ -148,13 +149,13 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 		}
 		if r1 == '(' {
 			if len(s) == 0 || unicode.IsUpper(s[0]) {
-				return nil, r.error(ErrSyntaxError)
+				return nil, r.ThrowError(ErrSyntaxError)
 			}
 			return r.readCompound(s)
 		}
 		if r1 == '[' {
 			if len(s) > 0 {
-				return nil, r.error(ErrSyntaxError)
+				return nil, r.ThrowError(ErrSyntaxError)
 			}	
 			return r.readList()
 		}
@@ -180,10 +181,10 @@ func (r *Reader) ReadTerms() (prolog.Terms, error) {
 	}
 	terms = append(terms, t)
 	for {
-		ok := r.last_read == r.And
-		if !ok && unicode.IsSpace(r.last_read) {
+		ok := r.Last_Read == r.And
+		if !ok && unicode.IsSpace(r.Last_Read) {
 			ok, err = r.findNext(r.And, true)
-			fmt.Println(ok, r.last_read)
+			fmt.Println(ok, r.Last_Read)
 			if err != nil {
 				return nil, err
 			}
@@ -208,7 +209,7 @@ func (r *Reader) readCompound(s []rune) (prolog.Term, error) {
 	if err != nil {
 		return nil, err
 	}
-	if r.last_read != ')' {
+	if r.Last_Read != ')' {
 		ok, err := r.findNext(')', true)
 		if !ok {
 			return nil, err
@@ -223,13 +224,13 @@ func (r *Reader) readCompound(s []rune) (prolog.Term, error) {
 func (r *Reader) readList() (prolog.Term, error) {
 	args, err := r.ReadTerms()
 	if len(args) == 0 {		
-		if r.last_read != ']' {
-			return nil, r.error(ErrSyntaxError)
+		if r.Last_Read != ']' {
+			return nil, r.ThrowError(ErrSyntaxError)
 		}
 		_, err = r.readRune()
 		return prolog.Empty_List, nil
 	}
-	switch r.last_read {
+	switch r.Last_Read {
 	case ']':
 		_, err = r.readRune()
 		return createList(args, prolog.Empty_List), err
@@ -238,13 +239,13 @@ func (r *Reader) readList() (prolog.Term, error) {
 		if err != nil {
 			return nil, err
 		}
-		if r.last_read != ']' {
-			return nil, r.error(ErrSyntaxError)
+		if r.Last_Read != ']' {
+			return nil, r.ThrowError(ErrSyntaxError)
 		}
 		_, err = r.readRune()
 		return createList(args, tail), err
 	default:
-		return nil, r.error(ErrSyntaxError)
+		return nil, r.ThrowError(ErrSyntaxError)
 	}
 	return nil, err
 }
@@ -259,7 +260,7 @@ func createList(heads prolog.Terms, tail prolog.Term) prolog.Term {
 
 func (r *Reader) readAtomVar(s []rune, err error) (prolog.Term, error) {
 	if len(s) == 0 {
-		return nil, r.error(ErrSyntaxError)
+		return nil, r.ThrowError(ErrSyntaxError)
 	}
 	if unicode.IsUpper(s[0]) {
 		return prolog.VarTemplate{string(s)}, err
@@ -278,7 +279,7 @@ func (r *Reader) readRune() (rune, error) {
 		}
 	}
 	r.column++
-	r.last_read = r1
+	r.Last_Read = r1
 	return r1, err
 }
 

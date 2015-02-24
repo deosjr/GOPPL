@@ -40,9 +40,7 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 func TestPerms(t *testing.T) {
 	memory.InitFromFile("tests/permutation_test.pl")
 	memory.InitBuiltIns()
-	x,y := &prolog.Var{"X"}, &prolog.Var{"Y"}
-	h := prolog.Compound_Term{prolog.Predicate{"hardcoded2",2}, prolog.Terms{x,y}}
-	query := prolog.Terms{h}
+	query := parseQuery("hardcoded2(X,Y).")
 	testAnswers := []map[string]string{
 		{"X":"a","Y":"a"},
 		{"X":"a","Y":"b"},
@@ -55,9 +53,7 @@ func TestPerms(t *testing.T) {
 func TestExample(t *testing.T) {
 	memory.InitFromFile("tests/example_test.pl")
 	memory.InitBuiltIns()
-	qx := &prolog.Var{"X"}
-	px := prolog.Compound_Term{prolog.Predicate{"p",1}, prolog.Terms{qx}}
-	query := prolog.Terms{px}
+	query := parseQuery("p(X).")
 	testAnswers := []map[string]string{
 		{"X":"a"},
 		{"X":"a"},
@@ -70,13 +66,7 @@ func TestExample(t *testing.T) {
 func TestPeano(t *testing.T) {
 	memory.InitFromFile("tests/peano_test.pl")
 	memory.InitBuiltIns()
-	s := prolog.Predicate{"s",1}
-	x := &prolog.Var{"X"}
-	//query := prolog.Terms{prolog.Compound_Term{prolog.Predicate{"int",1}, prolog.Terms{x}}}
-	s2 := prolog.Compound_Term{s, prolog.Terms{prolog.Compound_Term{s, prolog.Terms{prolog.Atom{"0"}}}}}
-	s3 := prolog.Compound_Term{s, prolog.Terms{prolog.Compound_Term{s, prolog.Terms{prolog.Compound_Term{s, prolog.Terms{prolog.Atom{"0"}}}}}}}
-	sum := prolog.Compound_Term{prolog.Predicate{"sum",3}, prolog.Terms{s2,s3,x}}
-	query := prolog.Terms{sum}
+	query := parseQuery("sum(s(s(0)), s(s(s(0))), X).")
 	testAnswers := []map[string]string{
 		{"X":"s(s(s(s(s(0)))))"},
 	}
@@ -86,12 +76,7 @@ func TestPeano(t *testing.T) {
 func TestLists(t *testing.T) {
 	memory.InitFromFile("tests/lists_test.pl")
 	memory.InitBuiltIns()
-	list := prolog.Predicate{"LIST",2}
-	l12345 := prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"1"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"2"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"3"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"4"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"5"}, prolog.Empty_List}}}}}}}}}}}}}}}
-	lx := &prolog.Var{"L"}
-	x := &prolog.Var{"X"}
-	cat := prolog.Compound_Term{prolog.Predicate{"cat",3}, prolog.Terms{lx,x,l12345}}
-	query := prolog.Terms{cat}
+	query := parseQuery("cat(L, X, [1,2,3,4,5]).")
 	testAnswers := []map[string]string{
 		{"L":"[]", "X":"[1,2,3,4,5]"},
 		{"L":"[1]", "X":"[2,3,4,5]"},
