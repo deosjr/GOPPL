@@ -8,12 +8,11 @@ import (
 
 func main() {	
 
-	//file := "example.pl"
-	file := "tests/lists_test.pl"
+	file := "example.pl"
 	memory.InitFromFile(file)
 	memory.InitBuiltIns()
 
-	query := memory.InitLists()
+	query := prolog.Terms{}
 	
 	memory.PrintMemory()
 	

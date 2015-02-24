@@ -35,6 +35,7 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 //TODO: when parsing is functioning,
 //make a table driven test using filename,expected_answers
 //so we have one testfunction instead of 3 identical ones
+//TODO: parse queries instead of constructing them
 
 func TestPerms(t *testing.T) {
 	memory.InitFromFile("tests/permutation_test.pl")
@@ -83,7 +84,14 @@ func TestPeano(t *testing.T) {
 }
 
 func TestLists(t *testing.T) {
-	query := memory.InitLists()
+	memory.InitFromFile("tests/lists_test.pl")
+	memory.InitBuiltIns()
+	list := prolog.Predicate{"LIST",2}
+	l12345 := prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"1"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"2"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"3"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"4"}, prolog.List{prolog.Compound_Term{list, prolog.Terms{prolog.Atom{"5"}, prolog.Empty_List}}}}}}}}}}}}}}}
+	lx := &prolog.Var{"L"}
+	x := &prolog.Var{"X"}
+	cat := prolog.Compound_Term{prolog.Predicate{"cat",3}, prolog.Terms{lx,x,l12345}}
+	query := prolog.Terms{cat}
 	testAnswers := []map[string]string{
 		{"L":"[]", "X":"[1,2,3,4,5]"},
 		{"L":"[1]", "X":"[2,3,4,5]"},

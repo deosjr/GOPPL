@@ -147,37 +147,23 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 			r.line++
 		}
 		if r1 == '(' {
-			if unicode.IsUpper(s[0]) {
+			if len(s) == 0 || unicode.IsUpper(s[0]) {
 				return nil, r.error(ErrSyntaxError)
 			}
-			functor := string(s)
-			args, err := r.ReadTerms()
-			if err != nil {
-				return nil, err
-			}
-			if r.last_read != ')' {
-				ok, err := r.findNext(')', true)
-				if !ok {
-					return nil, err
-				}
-			}
-			r1, err = r.readRune()	//TODO: check: consumes )?
-			predicate := prolog.Predicate{functor, len(args)}
-			compound := prolog.Compound_Term{predicate, args}
-			return compound, err
+			return r.readCompound(s)
 		}
 		if r1 == '[' {
-			//TODO: Lists
+			if len(s) > 0 {
+				return nil, r.error(ErrSyntaxError)
+			}	
+			return r.readList()
 		}
 		//For now, only accept letters/digits as Atom/Var names
 		if !unicode.IsLetter(r1) && !unicode.IsDigit(r1) {
 			if unicode.IsSpace(r1) {
 				r1, err = r.skipCommentsAndSpaces()
 			}
-			if unicode.IsUpper(s[0]) {
-				return prolog.VarTemplate{string(s)}, err
-			}
-			return prolog.Atom{string(s)}, err
+			return r.readAtomVar(s, err)
 		}
 		s = append(s, r1)
 		r1, err = r.readRune()
@@ -214,6 +200,71 @@ func (r *Reader) ReadTerms() (prolog.Terms, error) {
 	}
 	return terms, err
 	
+}
+
+func (r *Reader) readCompound(s []rune) (prolog.Term, error) {
+	functor := string(s)
+	args, err := r.ReadTerms()
+	if err != nil {
+		return nil, err
+	}
+	if r.last_read != ')' {
+		ok, err := r.findNext(')', true)
+		if !ok {
+			return nil, err
+		}
+	}
+	_, err = r.readRune()
+	predicate := prolog.Predicate{functor, len(args)}
+	compound := prolog.Compound_Term{predicate, args}
+	return compound, err
+}
+
+func (r *Reader) readList() (prolog.Term, error) {
+	args, err := r.ReadTerms()
+	if len(args) == 0 {		
+		if r.last_read != ']' {
+			return nil, r.error(ErrSyntaxError)
+		}
+		_, err = r.readRune()
+		return prolog.Empty_List, nil
+	}
+	switch r.last_read {
+	case ']':
+		_, err = r.readRune()
+		return createList(args, prolog.Empty_List), err
+	case '|':
+		tail, err := r.ReadTerm()
+		if err != nil {
+			return nil, err
+		}
+		if r.last_read != ']' {
+			return nil, r.error(ErrSyntaxError)
+		}
+		_, err = r.readRune()
+		return createList(args, tail), err
+	default:
+		return nil, r.error(ErrSyntaxError)
+	}
+	return nil, err
+}
+
+func createList(heads prolog.Terms, tail prolog.Term) prolog.Term {
+	list := tail
+	for i := len(heads)-1; i >= 0; i-- {
+		list = prolog.List{prolog.Compound_Term{prolog.Predicate{"LIST",2}, prolog.Terms{heads[i], list}}}
+	}
+	return list
+}
+
+func (r *Reader) readAtomVar(s []rune, err error) (prolog.Term, error) {
+	if len(s) == 0 {
+		return nil, r.error(ErrSyntaxError)
+	}
+	if unicode.IsUpper(s[0]) {
+		return prolog.VarTemplate{string(s)}, err
+	}
+	return prolog.Atom{string(s)}, err
 }
 
 func (r *Reader) readRune() (rune, error) {

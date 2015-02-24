@@ -6,6 +6,8 @@ type List struct {
 	Compound_Term
 }
 
+var Empty_List List = List{Compound_Term{Predicate{"LIST",2}, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}
+
 func (l List) head() Term {
 	t := l.Args[0]
 	if l.isEmpty() {
