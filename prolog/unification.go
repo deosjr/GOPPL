@@ -71,6 +71,9 @@ func (c Compound_Term) unifyWith(t Term, alias Alias) (unified bool, newalias Al
 func (l List) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	switch t.(type){
 	case List:
+		if l.compareTo(Empty_List) && t.(List).compareTo(Empty_List) {
+			return true, alias
+		}
 		return unify(l.GetArgs(), t.(List).GetArgs(), alias)
 	case *Var:
 		return t.unifyWith(l, alias)

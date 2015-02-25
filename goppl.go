@@ -46,7 +46,6 @@ func parseQuery(q string) prolog.Terms {
 	reader := memory.NewReader(s)
 
 	terms, err := reader.ReadTerms()
-	// TODO: recover from syntax error in query (err == io.EOF)
 	if err == io.EOF {
 		panic(reader.ThrowError(memory.ErrQueryError))
 	}
@@ -78,15 +77,14 @@ func REPL() {
 		//		or [filename] to load a file (rather consult/1)
 		
 		query := parseQuery(input)
-		stack := prolog.InitStack(query)
-		answer := make(chan prolog.Alias, 1)
-		go prolog.DFS(stack, answer)
+		empty, answer := prolog.GetInit()
+		go prolog.DFS(query, empty, answer)
 		
 		wait := true
 		ANSWERS:
 		for alias := range answer {
 			if len(alias) == 0 {
-				fmt.Println("True.")
+				fmt.Print("True.")
 			} else {
 				for k,v := range alias {
 					fmt.Printf("%s = %s. ", k, v.String())

@@ -5,20 +5,15 @@ type Data map[Predicate][]Rule
 
 var Memory Data = make(Data)
 
-// newest item in stack at termlist[len-1] (->)
-type Stack_Item struct {
-	termlist Terms
-	aliases  Alias
-}
-
-func InitStack(query Terms) Stack_Item {
+func GetInit() (Alias, chan Alias) {
 	no_alias := make(Alias)
-	return Stack_Item{query, no_alias}
+	answer := make(chan Alias, 1)
+	return no_alias, answer
 }
 
-func DFS(stack_item Stack_Item, answer chan Alias) {
+// newest item in stack at terms[len-1] (->)
+func DFS(terms Terms, aliases Alias, answer chan Alias) {
 	
-	terms, aliases := stack_item.termlist, stack_item.aliases
 	if len(terms) == 0 {
 		answer <- aliases
 		close(answer)
@@ -26,43 +21,54 @@ func DFS(stack_item Stack_Item, answer chan Alias) {
 	}
 	t, terms := terms[len(terms)-1], terms[:len(terms)-1]
 	
-	//Compound_Term assumption :
+	//Compound_Term assumption (TODO: check at parse?):
 	term := t.(Compound_Term)
 	rules, contains := Memory[term.Pred]
 	if !contains {
 		close(answer)
 		return
-	} else {
-		for _,rule_template := range rules {
-			rule := callRule(rule_template)
-			new_terms := terms
-			new_alias := make(Alias)
-			scope := []*Var{}
-			for k,v := range aliases {
-				new_alias[k] = v
-				scope = append(scope, k)
-			}
-			scope = append(scope, varsInTermArgs(term.GetArgs())...)
-			unifies, al := unify(term.GetArgs(), rule.Head, new_alias)
-			if !unifies {
-				continue
-			}
-			clash := updateAlias(new_alias, al)
-			if clash { 
-				continue 
-			}			
-			for i := len(rule.Body)-1; i >= 0; i-- {
-				new_terms = append(new_terms, rule.Body[i])
-			}
-			si := Stack_Item{new_terms, new_alias}
-			rec_answer := make(chan Alias)
-			go DFS(si, rec_answer)
-			for a := range rec_answer {
-				a = cleanUpVarsOutOfScope(a, scope)
-				answer <- a
-			}
+	}
+	exploreRules(rules, term, terms, aliases, answer)
+	close(answer)
+}
+
+func exploreRules(rules []Rule, term Compound_Term, terms Terms, aliases Alias, answer chan Alias) {
+	for _, rule_template := range rules {
+		rule := callRule(rule_template)
+		new_terms := terms
+		new_alias := make(Alias)
+		scope := []*Var{}
+		for k,v := range aliases {
+			new_alias[k] = v
+			scope = append(scope, k)
 		}
-		close(answer)
+		scope = append(scope, varsInTermArgs(term.GetArgs())...)
+		unifies, al := unify(term.GetArgs(), rule.Head, new_alias)
+		if !unifies {
+			continue
+		}
+		clash := updateAlias(new_alias, al)
+		if clash { 
+			continue 
+		}
+		new_terms = appendNewTerms(new_terms, rule.Body)
+		rec_answer := make(chan Alias)
+		go DFS(new_terms, new_alias, rec_answer)
+		awaitAnswers(rec_answer, answer, scope)
+	}
+}
+
+func appendNewTerms(terms Terms, new Terms) Terms {
+	for i := len(new)-1; i >= 0; i-- {
+		terms = append(terms, new[i])
+	}
+	return terms
+}
+
+func awaitAnswers(rec_answer chan Alias, answer chan Alias, scope []*Var) {
+	for a := range rec_answer {
+		a = cleanUpVarsOutOfScope(a, scope)
+		answer <- a
 	}
 }
 
@@ -81,6 +87,9 @@ func callRule(rule Rule) Rule {
 	}
 	return Rule{head, body}
 }
+
+// TODO: CreateVars, rec_substitute etc probably
+// need to be functions of Term just like unifyWith()
 
 func CreateVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
 	switch term.(type) {

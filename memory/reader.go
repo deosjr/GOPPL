@@ -1,4 +1,4 @@
-//TODO: Start by copying from csvreader, then make adjustments
+// Start by copying from csvreader, then make adjustments
 // See below for starting point / idiom reference
 // http://golang.org/src/encoding/csv/reader.go
 

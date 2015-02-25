@@ -7,10 +7,11 @@ import (
 	"GOPPL/prolog"
 )
 
+// TODO: evaluate nonterminating queries, by comparing the first X results from answer
+
 func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
-	stack := prolog.InitStack(query)
-	answer := make(chan prolog.Alias, 1)
-	go prolog.DFS(stack, answer)
+	empty, answer := prolog.GetInit()
+	go prolog.DFS(query, empty, answer)
 	for _, bindings := range testAnswers {
 		alias := <-answer
 		for k, v := range alias {
