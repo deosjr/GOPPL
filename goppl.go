@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"flag"
 	"fmt"
 	"path/filepath"
@@ -19,7 +20,7 @@ import (
 func main() {
 
 	var file string
-	flag.StringVar(&file, "f", "", "-f=.pl or .pro file")
+	flag.StringVar(&file, "f", "", ".pl or .pro file")
 	flag.Parse()
 	
 	if file == "" {
@@ -46,6 +47,9 @@ func parseQuery(q string) prolog.Terms {
 
 	terms, err := reader.ReadTerms()
 	// TODO: recover from syntax error in query (err == io.EOF)
+	if err == io.EOF {
+		panic(reader.ThrowError(memory.ErrQueryError))
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -66,12 +70,12 @@ func parseQuery(q string) prolog.Terms {
 func REPL() {
 
 	for {
+		//memory.PrintMemory()	// TODO: parse listing/1
 		fmt.Print("?- ")
 		var input string
 		fmt.Scanln(&input)
 		//TODO: parse something other than query, such as exit/1
 		//		or [filename] to load a file (rather consult/1)
-		//memory.PrintMemory()	// TODO: parse listing/1
 		
 		query := parseQuery(input)
 		stack := prolog.InitStack(query)
@@ -81,8 +85,12 @@ func REPL() {
 		wait := true
 		ANSWERS:
 		for alias := range answer {
-			for k,v := range alias {
-				fmt.Printf("%s = %s. ", k, v.String())
+			if len(alias) == 0 {
+				fmt.Println("True.")
+			} else {
+				for k,v := range alias {
+					fmt.Printf("%s = %s. ", k, v.String())
+				}
 			}
 			if wait {
 				WAIT:

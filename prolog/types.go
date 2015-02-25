@@ -18,7 +18,8 @@ type Alias map[*Var]Term
 
 type Term interface {
 	String() string
-	compare_to(Term) bool
+	unifyWith(Term, Alias) (bool, Alias)
+	compareTo(Term) bool
 	ground(Alias) bool
 }
 
@@ -55,7 +56,7 @@ func (c Compound_Term) GetArgs() Terms {
 
 //TODO: check Equaler interface!
 
-func (a Atom) compare_to(t Term) bool {
+func (a Atom) compareTo(t Term) bool {
 	switch t.(type) {
 	case Atom:
 		return a == t
@@ -63,7 +64,7 @@ func (a Atom) compare_to(t Term) bool {
 	return false
 }
 
-func (v *Var) compare_to(t Term) bool {
+func (v *Var) compareTo(t Term) bool {
 	switch t.(type) {
 	case *Var:
 		return v == t
@@ -71,14 +72,14 @@ func (v *Var) compare_to(t Term) bool {
 	return false
 }
 
-func (c Compound_Term) compare_to(t Term) bool {
+func (c Compound_Term) compareTo(t Term) bool {
 	switch t.(type) {
 	case Compound:
 		tc := t.(Compound)
 		if c.GetPredicate() == tc.GetPredicate() {
 			cargs, tcargs := c.GetArgs(), tc.GetArgs()
 			for i:=0; i < len(cargs); i++ {
-				if !cargs[i].compare_to(tcargs[i]) {
+				if !cargs[i].compareTo(tcargs[i]) {
 					return false
 				}
 			}
@@ -88,7 +89,7 @@ func (c Compound_Term) compare_to(t Term) bool {
 	return false
 }
 
-func (v VarTemplate) compare_to(t Term) bool {
+func (v VarTemplate) compareTo(t Term) bool {
 	switch t.(type) {
 	case VarTemplate:
 		return v.Name == t.(VarTemplate).Name

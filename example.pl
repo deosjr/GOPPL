@@ -18,6 +18,17 @@ cat([], L, L).
 cat([H|T], L, [H|R]) :-
 	cat(T, L, R).
 	
+canWeDoThis(X, Y) :-					% Lists and predicates over multiple lines
+	areInteger([						% parse just fine.
+		X,
+		Y
+	]).
+	
+areInteger([]).							% Problem: areInteger([0,0]) doesn't work.
+areInteger([H|T]) :-					% [] doesn't unify with [] due to RESERVED
+	int(H),
+	areInteger(T).
+	
 singleton(A) :- int(A), int(B).			% Singleton variables should be a syntax error!
 	
 isIgnored(0).

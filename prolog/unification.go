@@ -13,7 +13,7 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 	}
 	
 	for i := 0; i < len(args1); i++ {
-		unifies, al := unify_term(args1[i], args2[i], aliases)
+		unifies, al := args1[i].unifyWith(args2[i], aliases)
 		if !unifies {
 			return false, nil
 		}
@@ -25,55 +25,60 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 	return true, newalias
 }
 
-func unify_term(term1 Term, term2 Term, aliases Alias) (unified bool, newalias Alias) {
+func (a Atom) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+	switch t.(type){
+	case Atom:
+		if a.Value == t.(Atom).Value {
+			return true, newalias
+		}
+	case *Var:
+		return t.unifyWith(a, alias)
+	}
+	return false, nil
+}
 
+func (v *Var) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+	// already unified
+	if bound, contains := alias[v]; contains {
+		return bound.unifyWith(t, alias)
+	}
+	switch t.(type){
+	case Atom:
+		if t.(Atom).Value == "RESERVED" {
+			return false, nil
+		}	
+	case *Var:
+		// TODO: nothing? you sure?
+	}
 	newalias = make(Alias)
-	// RESERVED is an ununifyable atom
-	if atom1, ok := term1.(Atom); ok && atom1.Value == "RESERVED" {
-		return false, nil
-	}
-	if atom2, ok := term2.(Atom); ok && atom2.Value == "RESERVED" {
-		return false, nil
-	}
+	newalias[v] = t
+	return true, newalias
+}
 
-	// unification of var1:
-	if var1, ok := term1.(*Var); ok {
-		// already unified
-		if bound, contains := aliases[var1]; contains {
-			return unify_term(bound, term2, aliases)
-		// var1 and var2
-		} else if var2, ok2 := term2.(*Var); ok2 {
-			newalias[var1] = var2
-			return true, newalias	
-		// var1 and nonvar2
-		} else {
-			newalias[var1] = term2
-			return true, newalias
+func (c Compound_Term) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+	switch t.(type){
+	case Compound_Term:
+		ct := t.(Compound_Term)
+		if c.GetPredicate() == ct.GetPredicate() {
+			return unify(c.GetArgs(), ct.GetArgs(), alias)
 		}
-	// unification of var2
-	} else if var2, ok := term2.(*Var); ok {
-		// already unified
-		if bound, contains := aliases[var2]; contains {
-			return unify_term(term1, bound, aliases)
-		// var2 and nonvar1
-		} else {
-			newalias[var2] = term1
-			return true, newalias
-		}
-	// unification of two atoms:
-	} else if atom1, ok1 := term1.(Atom); ok1 {
-		if atom2, ok2 := term2.(Atom); ok2 {
-			if atom1.Value == atom2.Value {
-				return true, newalias
-			}
-		}
-	// can't unify compound term with atom
-	} else if _, ok2 := term2.(Atom); ok2 { 
-		return false, nil
-	// unification of two compound terms
-	} else if c1, c2 := term1.(Compound), term2.(Compound); c1.GetPredicate() == c2.GetPredicate() {
-		return unify(c1.GetArgs(), c2.GetArgs(), aliases)
+	case *Var:
+		return t.unifyWith(c, alias)
 	}
+	return false, nil
+}
+
+func (l List) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+	switch t.(type){
+	case List:
+		return unify(l.GetArgs(), t.(List).GetArgs(), alias)
+	case *Var:
+		return t.unifyWith(l, alias)
+	}
+	return false, nil
+}
+
+func (v VarTemplate) unifyWith(t Term, alias Alias) (bool, Alias) {
 	return false, nil
 }
 
@@ -85,7 +90,7 @@ func updateAlias(aliases Alias, updates Alias) (clash bool) {
 			case *Var:
 				break
 			default:
-				if !av.compare_to(v) {
+				if !av.compareTo(v) {
 					return true
 				}
 			}
