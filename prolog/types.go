@@ -18,9 +18,10 @@ type Alias map[*Var]Term
 
 type Term interface {
 	String() string
-	unifyWith(Term, Alias) (bool, Alias)
+	UnifyWith(Term, Alias) (bool, Alias)
+	CreateVars(map[VarTemplate]Term) (Term, map[VarTemplate]Term)
 	compareTo(Term) bool
-	ground(Alias) bool
+	substituteVars(Alias, []*Var) Term
 }
 
 type Atom struct {
@@ -37,6 +38,7 @@ type VarTemplate struct {
 }
 
 type Compound interface {
+	Term
 	GetPredicate() Predicate
 	GetArgs() Terms
 }
@@ -95,31 +97,4 @@ func (v VarTemplate) compareTo(t Term) bool {
 		return v.Name == t.(VarTemplate).Name
 	}
 	return false
-}
-
-func (a Atom) ground(alias Alias) bool {
-	return true
-}
-
-// Grounded Var is bound to Atom or Compound_Term
-// TODO: Groundedness of Compound doesnt matter right now. Should it?
-func (v Var) ground(alias Alias) bool {
-	if value,contains := alias[&v]; contains {
-		_,ok := value.(*Var)
-		return !ok
-	}
-	return false
-}
-
-func (c Compound_Term) ground(alias Alias) bool {
-	for _,t := range c.GetArgs() {
-		if !t.ground(alias) {
-			return false
-		}
-	}
-	return true
-}
-
-func (v VarTemplate) ground(alias Alias) bool {
-	return true
 }

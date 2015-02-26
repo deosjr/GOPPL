@@ -13,7 +13,7 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 	}
 	
 	for i := 0; i < len(args1); i++ {
-		unifies, al := args1[i].unifyWith(args2[i], aliases)
+		unifies, al := args1[i].UnifyWith(args2[i], aliases)
 		if !unifies {
 			return false, nil
 		}
@@ -25,25 +25,26 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 	return true, newalias
 }
 
-func (a Atom) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (a Atom) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	switch t.(type){
 	case Atom:
 		if a.Value == t.(Atom).Value {
 			return true, newalias
 		}
 	case *Var:
-		return t.unifyWith(a, alias)
+		return t.UnifyWith(a, alias)
 	}
 	return false, nil
 }
 
-func (v *Var) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (v *Var) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	// already unified
 	if bound, contains := alias[v]; contains {
-		return bound.unifyWith(t, alias)
+		return bound.UnifyWith(t, alias)
 	}
 	switch t.(type){
 	case Atom:
+		// The RESERVED atom never unifies
 		if t.(Atom).Value == "RESERVED" {
 			return false, nil
 		}	
@@ -55,7 +56,7 @@ func (v *Var) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	return true, newalias
 }
 
-func (c Compound_Term) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (c Compound_Term) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	switch t.(type){
 	case Compound_Term:
 		ct := t.(Compound_Term)
@@ -63,25 +64,26 @@ func (c Compound_Term) unifyWith(t Term, alias Alias) (unified bool, newalias Al
 			return unify(c.GetArgs(), ct.GetArgs(), alias)
 		}
 	case *Var:
-		return t.unifyWith(c, alias)
+		return t.UnifyWith(c, alias)
 	}
 	return false, nil
 }
 
-func (l List) unifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (l List) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	switch t.(type){
 	case List:
+		// This workaround is needed because RESERVED doesn't unify
 		if l.compareTo(Empty_List) && t.(List).compareTo(Empty_List) {
 			return true, alias
 		}
 		return unify(l.GetArgs(), t.(List).GetArgs(), alias)
 	case *Var:
-		return t.unifyWith(l, alias)
+		return t.UnifyWith(l, alias)
 	}
 	return false, nil
 }
 
-func (v VarTemplate) unifyWith(t Term, alias Alias) (bool, Alias) {
+func (v VarTemplate) UnifyWith(t Term, alias Alias) (bool, Alias) {
 	return false, nil
 }
 

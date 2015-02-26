@@ -15,7 +15,6 @@ import (
 //		 this is not very efficient
 // TODO: multi-term queries: int(X), int(Y).
 // 		 Right now only Y is in scope in answer
-// TODO: query cat([1],[2],X) to Lists gives False?
 
 func main() {
 
@@ -55,7 +54,7 @@ func parseQuery(q string) prolog.Terms {
 	var_alias := make(map[prolog.VarTemplate]prolog.Term)
 	query := prolog.Terms{}
 	for _, t := range terms {
-		qt, var_alias := prolog.CreateVars(t, var_alias)
+		qt, var_alias := t.CreateVars(var_alias)
 		var_alias = var_alias
 		query = append(query, qt)
 	}

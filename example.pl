@@ -6,18 +6,22 @@
 int(0).
 int(s(M)) :- int(M).
 	
-sum(0, M, M).
-sum(s(N),M,s(K)) :-
-	sum(N,M,K).
+difflist([],X,X).						% Only works one way, append([],[],X).
+difflist([H|T],[H|HDiff],TDiff)			% not append([], X, []).
+	:- difflist(T,HDiff,TDiff).
+	
+append(A,B,C) :-
+		difflist(A,A1,A2),
+		difflist(B,B1,B2),
+		append(A1,A2,B1,B2,C1,[]),
+		difflist(C,C1,[]).
+		
+append(A,B,B,C,A,C).
 	
 %int(0) .								%% Stop not immediately following is a syntax error
 	
 whyWouldYou(X) :- int(X). doThis(0).	%% Newlines are ignored, no problem.
 %zeroArguments.							% For now, all rules start with a compound term
-
-cat([], L, L).
-cat([H|T], L, [H|R]) :-
-	cat(T, L, R).
 	
 canWeDoThis(X, Y) :-					%% Lists and predicates over multiple lines
 	areInteger([						%% parse just fine.

@@ -76,50 +76,54 @@ func callRule(rule Rule) Rule {
 	var_alias := make(map[VarTemplate]Term)
 	head, body := Terms{}, Terms{}
 	for _, term := range rule.Head {
-		vt, var_alias := CreateVars(term, var_alias)
+		vt, var_alias := term.CreateVars(var_alias)
 		var_alias = var_alias
 		head = append(head, vt)
 	}
 	for _, term := range rule.Body {
-		vt, var_alias := CreateVars(term, var_alias)
+		vt, var_alias := term.CreateVars(var_alias)
 		var_alias = var_alias
 		body = append(body, vt)
 	}
 	return Rule{head, body}
 }
 
-// TODO: CreateVars, rec_substitute etc probably
-// need to be functions of Term just like unifyWith()
+func (a Atom) CreateVars(va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
+	return a, va
+}
 
-func CreateVars(term Term, va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
-	switch term.(type) {
-	case VarTemplate:
-		v := term.(VarTemplate)
-		value, renamed := va[v]
-		if renamed {
-			return value, va
-		}
-		newv := &Var{v.Name}	
-		va[v] = newv
-		return newv, va
-	case Compound:
-		renamed_args := Terms{}
-		c := term.(Compound)
-		for _, ot := range c.GetArgs() {
-			vt, va := CreateVars(ot, va)
-			va = va
-			renamed_args = append(renamed_args, vt)
-		}
-		var newc Term
-		switch c.(type) {
-		case Compound_Term:
-			newc = Compound_Term{c.GetPredicate(), renamed_args}
-		case List:
-			newc = List{Compound_Term{c.GetPredicate(), renamed_args}}
-		}
-		return newc, va
+func (v *Var) CreateVars(va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
+	return v, va
+}
+
+func (v VarTemplate) CreateVars(va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
+	value, renamed := va[v]
+	if renamed {
+		return value, va
 	}
-	return term, va
+	newv := &Var{v.Name}	
+	va[v] = newv
+	return newv, va
+}
+
+func (c Compound_Term) CreateVars(va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
+	renamed_args := Terms{}
+	for _, ot := range c.GetArgs() {
+		vt, va := ot.CreateVars( va)
+		va = va
+		renamed_args = append(renamed_args, vt)
+	}
+	return Compound_Term{c.GetPredicate(), renamed_args}, va
+}
+
+func (l List) CreateVars(va map[VarTemplate]Term) (Term, map[VarTemplate]Term) {
+	renamed_args := Terms{}
+	for _, ot := range l.GetArgs() {
+		vt, va := ot.CreateVars( va)
+		va = va
+		renamed_args = append(renamed_args, vt)
+	}
+	return List{Compound_Term{l.GetPredicate(), renamed_args}}, va
 }
 
 func cleanUpVarsOutOfScope(to_clean Alias, scope []*Var) Alias {
@@ -139,13 +143,7 @@ func cleanUpVarsOutOfScope(to_clean Alias, scope []*Var) Alias {
 				clean[v] = value
 				break Loop
 			case Compound:
-				compound := rec_substitute(value.(Compound), to_clean, scope)
-				switch compound.(type) {
-				case List:
-					clean[v] = compound.(List)
-				case Compound_Term:
-					clean[v] = compound.(Compound_Term)
-				}
+				clean[v] = value.(Compound).substituteVars(to_clean, scope)
 				break Loop
 			}
 		}
@@ -153,47 +151,45 @@ func cleanUpVarsOutOfScope(to_clean Alias, scope []*Var) Alias {
 	return clean
 }
 
-func rec_substitute(c Compound, a Alias, scope []*Var) Compound {
+func (a Atom) substituteVars(al Alias, scope []*Var) Term {
+	return a
+}
+
+func (v VarTemplate) substituteVars(a Alias, scope []*Var) Term {
+	return v
+}
+
+func (v *Var) substituteVars(a Alias, scope []*Var) Term {
+	v1, ok := a[v]
+	if inScope(v, scope) || !ok {
+		return v
+	}
+	//var not in scope but bound in a
+	switch v1.(type) {
+	case Compound:
+		return v1.(Compound).substituteVars(a, scope)
+	}
+	return v1
+}
+
+func (c Compound_Term) substituteVars(a Alias, scope []*Var) Term {
 	
 	sub_args := Terms{}
 	for _,term := range c.GetArgs() {
-		switch term.(type){
-		case Atom:
-			sub_args = append(sub_args, term)
-		case *Var:
-			v := term.(*Var)
-			v1, ok := a[v]
-			if inScope(v, scope) || !ok {
-				sub_args = append(sub_args, v)
-			} else {	//var not in scope but bound in a
-				switch v1.(type) {
-				case Compound:
-					sub_c := rec_substitute(v1.(Compound), a, scope)
-					switch sub_c.(type) {
-					case List:
-						sub_args = append(sub_args, sub_c.(List))
-					case Compound_Term:
-						sub_args = append(sub_args, sub_c.(Compound_Term))
-					}
-				default:
-					sub_args = append(sub_args, v1)
-				}
-			}
-		case Compound:
-			sub_c := rec_substitute(term.(Compound), a, scope)
-			switch sub_c.(type) {
-			case List:
-				sub_args = append(sub_args, sub_c.(List))
-			case Compound_Term:
-				sub_args = append(sub_args, sub_c.(Compound_Term))
-			}
-		}
-	}
-	switch c.(type) {
-	case List:
-		return List{Compound_Term{c.GetPredicate(), sub_args}}
+		sub := term.substituteVars(a, scope)
+		sub_args = append(sub_args, sub)
 	}
 	return Compound_Term{c.GetPredicate(), sub_args}
+}
+
+func (l List) substituteVars(a Alias, scope []*Var) Term {
+	
+	sub_args := Terms{}
+	for _,term := range l.GetArgs() {
+		sub := term.substituteVars(a, scope)
+		sub_args = append(sub_args, sub)
+	}
+	return List{Compound_Term{l.GetPredicate(), sub_args}}
 }
 
 func varsInTermArgs(terms Terms) []*Var {
