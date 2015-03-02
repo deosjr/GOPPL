@@ -10,10 +10,13 @@ import (
 // TODO: evaluate nonterminating queries, by comparing the first X results from answer
 
 func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
-	empty, answer := prolog.GetInit()
-	go prolog.DFS(query, empty, answer)
+	node :=  prolog.StartDFS(query)
 	for _, bindings := range testAnswers {
-		alias := <-answer
+		result, open := <- node.Answer
+		alias := result.A
+		if !open {
+			t.Errorf("Not enough answers")
+		}
 		for k, v := range alias {
 			if _, contains := bindings[k.String()]; !contains {
 				t.Errorf("Out of scope variable %s in alias", k.String())
@@ -25,10 +28,10 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 		if len(bindings) > 0 {
 			t.Errorf("Unbound input variables: %v", bindings)
 		}
+		node.Notify()
 	}
-	_, open := <-answer
-	if open {
-		t.Errorf("Channel still open!")
+	if result, open := <- node.Answer; open && result.Err != prolog.Notification {
+		t.Errorf("Too many answers")
 	}
 }
 
@@ -45,6 +48,7 @@ func TestPerms(t *testing.T) {
 	evaluateQuery(t, query, testAnswers)
 }
 
+//DEADLOCKS!
 func TestExample(t *testing.T) {
 	memory.InitFromFile("tests/example_test.pl")
 	memory.InitBuiltIns()
@@ -58,6 +62,7 @@ func TestExample(t *testing.T) {
 	evaluateQuery(t, query, testAnswers)
 }
 
+//DEADLOCKS!
 func TestPeano(t *testing.T) {
 	memory.InitFromFile("tests/peano_test.pl")
 	memory.InitBuiltIns()

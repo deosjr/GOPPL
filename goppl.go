@@ -13,8 +13,6 @@ import (
 	"GOPPL/prolog"
 )
 
-// TODO: query int(X) to Peano kicks off infinite go routines
-//		 this is not very efficient
 // TODO: multi-term queries: int(X), int(Y).
 // 		 Right now only Y is in scope in answer
 
@@ -79,13 +77,16 @@ func REPL() {
 		//		or [filename] to load a file (rather consult/1)
 		
 		query := parseQuery(input)
-		empty, answer := prolog.GetInit()
-		go prolog.DFS(query, empty, answer)
+		node := prolog.StartDFS(query)
 		
 		wait := true
 		s.Split(bufio.ScanRunes)
 		ANSWERS:
-		for alias := range answer {
+		for result := range node.Answer {
+			alias := result.A
+			if result.Err == prolog.Notification {
+				break
+			}
 			if len(alias) == 0 {
 				fmt.Print("True.")
 			} else {
@@ -108,7 +109,10 @@ func REPL() {
 					}
 				}
 			}
-			fmt.Println()
+			node.Notify()
+			if !wait {
+				fmt.Println()
+			}
 		}
 		fmt.Println("False.")
 	

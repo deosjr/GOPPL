@@ -1,41 +1,84 @@
 
 package prolog
 
+import "errors"
+
 type Data map[Predicate][]Rule
 
 var Memory Data = make(Data)
 
-func GetInit() (Alias, chan Alias) {
-	no_alias := make(Alias)
-	answer := make(chan Alias, 1)
-	return no_alias, answer
+var Notification error = errors.New("notify")
+
+type searchnode struct {
+	Answer chan result
+	notify chan bool
+	children []*searchnode
+	// newest item in stack at end: stack[len-1] (->)
+	stack Terms
 }
 
-// newest item in stack at terms[len-1] (->)
-func DFS(terms Terms, aliases Alias, answer chan Alias) {
+func (node *searchnode) Notify() {
+	if len(node.children) > 0 {
+		node.children[0].Notify()
+	} else {
+		node.notify <- true
+	}
+}
+
+func (node *searchnode) closeAll(cont bool) {
+	for _, c := range node.children {
+		close(c.notify)
+	}
+	if cont && len(node.notify) > 0 {
+		<- node.notify
+		node.Answer <- result{nil, Notification}
+	}
+	close(node.Answer)
+}
+
+func newNode(terms Terms) *searchnode {
+	answer := make(chan result, 1)
+	notify := make(chan bool, 1)
+	return &searchnode{answer, notify, []*searchnode{}, terms}
+}
+
+type result struct {
+	A Alias
+	Err error
+}
+
+func StartDFS(query Terms) *searchnode {
+	no_alias := make(Alias)
+	startnode := newNode(query)
+	go startnode.dfs(no_alias)
+	startnode.Notify()
+	return startnode
+}
+
+func (node *searchnode) dfs(aliases Alias) {
 	
-	if len(terms) == 0 {
-		answer <- aliases
-		close(answer)
+	if len(node.stack) == 0 {
+		node.Answer <- result{aliases, nil}
+		node.closeAll(false)
 		return
 	}
-	t, terms := terms[len(terms)-1], terms[:len(terms)-1]
+	terms, t := node.stack[:len(node.stack)-1], node.stack[len(node.stack)-1]
 	
 	//Compound_Term assumption (TODO: check at parse?):
 	term := t.(Compound_Term)
 	rules, contains := Memory[term.Pred]
 	if !contains {
-		close(answer)
+		node.closeAll(false)
 		return
 	}
-	exploreRules(rules, term, terms, aliases, answer)
-	close(answer)
+	node.exploreRules(rules, term, terms, aliases)
+	node.closeAll(true)
 }
 
-func exploreRules(rules []Rule, term Compound_Term, terms Terms, aliases Alias, answer chan Alias) {
+func (node *searchnode) exploreRules(rules []Rule, term Compound_Term, terms Terms, aliases Alias) {
 	for _, rule_template := range rules {
+		<- node.notify
 		rule := callRule(rule_template)
-		new_terms := terms
 		new_alias := make(Alias)
 		scope := []*Var{}
 		for k,v := range aliases {
@@ -45,30 +88,47 @@ func exploreRules(rules []Rule, term Compound_Term, terms Terms, aliases Alias, 
 		scope = append(scope, varsInTermArgs(term.GetArgs())...)
 		unifies, al := unify(term.GetArgs(), rule.Head, new_alias)
 		if !unifies {
+			node.notify <- true
 			continue
 		}
 		clash := updateAlias(new_alias, al)
 		if clash { 
+			node.notify <- true
 			continue 
 		}
-		new_terms = appendNewTerms(new_terms, rule.Body)
-		rec_answer := make(chan Alias)
-		go DFS(new_terms, new_alias, rec_answer)
-		awaitAnswers(rec_answer, answer, scope)
+		newnode := newNode(appendNewTerms(terms, rule.Body))
+		node.children = append(node.children, newnode)
+		go newnode.dfs(new_alias)
+		node.awaitAnswers(newnode, scope)
 	}
 }
 
-func appendNewTerms(terms Terms, new Terms) Terms {
+func appendNewTerms(old Terms, new Terms) Terms {
+	terms := make(Terms, len(old))
+	copy(terms, old)
 	for i := len(new)-1; i >= 0; i-- {
 		terms = append(terms, new[i])
 	}
 	return terms
 }
 
-func awaitAnswers(rec_answer chan Alias, answer chan Alias, scope []*Var) {
-	for a := range rec_answer {
+func (node *searchnode) awaitAnswers(child *searchnode, scope []*Var) {
+	child.Notify()
+	succes := false
+	for r := range child.Answer {
+		succes = true
+		a, err := r.A, r.Err
+		if err == Notification {
+			node.notify <- true
+			break
+		}
 		a = cleanUpVarsOutOfScope(a, scope)
-		answer <- a
+		node.Answer <- result{a, err}
+	}
+	node.children = node.children[1:]
+	close(child.notify)
+	if !succes {
+		node.notify <- true
 	}
 }
 
