@@ -72,7 +72,6 @@ func (r *Reader) ReadAll() (prolog.Data, error) {
 		}
 		r.addData(predicate, rule)
 	}
-	
 }
 
 // Read returns the next full rule in a prolog file
@@ -162,7 +161,7 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 			return r.readList()
 		}
 		//For now, only accept letters/digits as Atom/Var names
-		if !unicode.IsLetter(r1) && !unicode.IsDigit(r1) {
+		if !unicode.IsLetter(r1) && !unicode.IsDigit(r1) && r1 != '_'{
 			if unicode.IsSpace(r1) {
 				r1, err = r.skipCommentsAndSpaces()
 			}
@@ -255,7 +254,7 @@ func (r *Reader) readAtomVar(s []rune, err error) (prolog.Term, error) {
 	if len(s) == 0 {
 		return nil, r.ThrowError(ErrSyntaxError)
 	}
-	if unicode.IsUpper(s[0]) {
+	if unicode.IsUpper(s[0]) || s[0] == '_' {
 		return prolog.VarTemplate{string(s)}, err
 	}
 	return prolog.Atom{string(s)}, err

@@ -32,10 +32,48 @@ func InitFromFile(filename string) {
 	
 	for pred, rules := range data {
 		for _, rule := range rules {
+			//err = checkSingletons(rule)
+			if err != nil {
+				panic(err)
+			}
 			addData(pred, rule)
 		}
 	}
 }
+
+/**
+func checkSingletons(rule prolog.Rule) error {
+	vars := make(map[prolog.VarTemplate]int)
+	for _, v := range varTemplates(append(rule.Head, rule.Body...)) {
+		i, ok := vars[v]
+		if ok {
+			vars[v] = i+1
+		} else {
+			vars[v] = 1
+		}
+	}
+	for _, v := range vars {
+		if v < 2 {
+			return errors.New("singleton error")
+		}
+	}
+	return nil
+}
+
+// TODO: duplicate of search.varsInTermArgs in functionality!
+func varTemplates(terms prolog.Terms) []prolog.VarTemplate {
+	vars := []prolog.VarTemplate{}
+	for _,term := range terms {
+		switch term.(type) {
+		case prolog.VarTemplate:
+			vars = append(vars, term.(prolog.VarTemplate))
+		case prolog.Compound_Term:
+			vars = append(vars, varTemplates(term.(prolog.Compound_Term).GetArgs())...)
+		}
+	}
+	return vars
+}
+*/
 
 //TODO: suppress these by default when printing memory 
 func InitBuiltIns() {

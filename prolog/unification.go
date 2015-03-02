@@ -42,6 +42,10 @@ func (v *Var) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	if bound, contains := alias[v]; contains {
 		return bound.UnifyWith(t, alias)
 	}
+	// TODO: anonymous vars are all the same atm. Give them an identifier?
+	if v.Name[0] == '_' {
+		return true, alias
+	}
 	switch t.(type){
 	case Atom:
 		// The RESERVED atom never unifies

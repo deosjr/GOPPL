@@ -5,6 +5,8 @@
 
 int(0).
 int(s(M)) :- int(M).
+
+dontCare(_).
 	
 difflist([],X,X).						% Only works one way, append([],[],X).
 difflist([H|T],[H|HDiff],TDiff)			% not append([], X, []).

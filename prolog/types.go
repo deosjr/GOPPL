@@ -28,7 +28,6 @@ type Atom struct {
 	Value string
 }
 
-//TODO: Anonymous variables as Vars with _name?
 type Var struct {
 	Name string
 }
@@ -55,8 +54,6 @@ func (c Compound_Term) GetPredicate() Predicate {
 func (c Compound_Term) GetArgs() Terms {
 	return c.Args
 }
-
-//TODO: check Equaler interface!
 
 func (a Atom) compareTo(t Term) bool {
 	switch t.(type) {

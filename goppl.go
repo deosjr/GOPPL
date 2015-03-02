@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"io"
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	
@@ -70,8 +72,9 @@ func REPL() {
 	for {
 		//memory.PrintMemory()	// TODO: parse listing/1
 		fmt.Print("?- ")
-		var input string
-		fmt.Scanln(&input)
+		s := bufio.NewScanner(os.Stdin)
+		s.Scan()
+		input := s.Text()
 		//TODO: parse something other than query, such as exit/1
 		//		or [filename] to load a file (rather consult/1)
 		
@@ -80,6 +83,7 @@ func REPL() {
 		go prolog.DFS(query, empty, answer)
 		
 		wait := true
+		s.Split(bufio.ScanRunes)
 		ANSWERS:
 		for alias := range answer {
 			if len(alias) == 0 {
@@ -92,9 +96,8 @@ func REPL() {
 			if wait {
 				WAIT:
 				for {
-					var response string
-					fmt.Scanln(&response)
-					switch response {
+					s.Scan()
+					switch s.Text() {
 					case ";": 
 						break WAIT
 					case "a":
