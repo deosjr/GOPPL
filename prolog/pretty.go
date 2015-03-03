@@ -26,7 +26,7 @@ func (tlist Terms) String() string {
 	return s + "]"
 } 
 
-func (a Alias) String() string {
+func (a Bindings) String() string {
 	s := "{"
 	for k,v := range a {
 		s = s + k.String() + ":" + v.String() + " "

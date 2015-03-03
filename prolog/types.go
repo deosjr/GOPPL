@@ -14,14 +14,15 @@ type Predicate struct {
 
 type Terms []Term
 
-type Alias map[*Var]Term
+type Bindings map[*Var]Term
+type tempBindings map[VarTemplate]Term
 
 type Term interface {
 	String() string
-	UnifyWith(Term, Alias) (bool, Alias)
-	CreateVars(map[VarTemplate]Term) (Term, map[VarTemplate]Term)
+	UnifyWith(Term, Bindings) (bool, Bindings)
+	CreateVars(tempBindings) (Term, tempBindings)
 	compareTo(Term) bool
-	substituteVars(Alias, []*Var) Term
+	substituteVars(Bindings, []*Var) Term
 }
 
 type Atom struct {

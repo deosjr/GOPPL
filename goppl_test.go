@@ -13,7 +13,7 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 	node :=  prolog.StartDFS(query)
 	for _, bindings := range testAnswers {
 		result, open := <- node.Answer
-		alias := result.A
+		alias := result.Alias
 		if !open {
 			t.Errorf("Not enough answers")
 		}
@@ -48,7 +48,6 @@ func TestPerms(t *testing.T) {
 	evaluateQuery(t, query, testAnswers)
 }
 
-//DEADLOCKS!
 func TestExample(t *testing.T) {
 	memory.InitFromFile("tests/example_test.pl")
 	memory.InitBuiltIns()
@@ -62,7 +61,6 @@ func TestExample(t *testing.T) {
 	evaluateQuery(t, query, testAnswers)
 }
 
-//DEADLOCKS!
 func TestPeano(t *testing.T) {
 	memory.InitFromFile("tests/peano_test.pl")
 	memory.InitBuiltIns()

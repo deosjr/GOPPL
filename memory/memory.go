@@ -8,7 +8,8 @@ import (
 	"GOPPL/prolog"
 )
 
-//TODO: occurs check, don't allow doubles!
+// TODO: occurs check, don't allow doubles!
+// This should catch redefining builtin and extralogical as well
 func addData(pred prolog.Predicate, r prolog.Rule) {
 	if value, ok := prolog.Memory[pred]; ok {
 		prolog.Memory[pred] = append(value, r)
@@ -74,34 +75,6 @@ func varTemplates(terms prolog.Terms) []prolog.VarTemplate {
 	return vars
 }
 */
-
-//TODO: suppress these by default when printing memory 
-func InitBuiltIns() {
-
-	x := prolog.VarTemplate{"X"}
-	anon := prolog.VarTemplate{"_"}
-
-	//TODO:
-	//	not/1
-	//	is/2 as IS
-	//	\=/2 as not(UNIFY)
-	
-	//	=/2 as UNIFY(X,X)
-	addData(prolog.Predicate{"UNIFY",2}, prolog.Rule{prolog.Terms{x, x}, prolog.Terms{}})
-
-	// Lists as LIST/2 using prolog.Atom EMPTYLIST as [] and RESERVED as end of list
-	// TODO: How come anon vars already seem to work?!
-	//		 They don't, you don't ask for a variable list, just use to check
-	list := prolog.Predicate{"LIST",2}
-	
-	// LIST([], RESERVED)
-	addData(list, prolog.Rule{prolog.Terms{prolog.Atom{"EMPTYLIST"}, prolog.Atom{"RESERVED"}}, prolog.Terms{}})
-	
-	// LIST(_, LIST(_,_))
-	tlist := prolog.CreateList(prolog.Terms{anon, anon}, prolog.Empty_List)
-	addData(list, prolog.Rule{prolog.Terms{anon, tlist}, prolog.Terms{}})
-
-}
 
 func PrintMemory() {
 	for k,v := range prolog.Memory {

@@ -149,10 +149,10 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 			r.line++
 		}
 		if r1 == '(' {
-			if len(s) == 0 || unicode.IsUpper(s[0]) {
+			if !checkValidFunctor(s) {
 				return nil, r.ThrowError(ErrSyntaxError)
 			}
-			return r.readCompound(s)
+			return r.readCompound(string(s))
 		}
 		if r1 == '[' {
 			if len(s) > 0 {
@@ -160,8 +160,7 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 			}	
 			return r.readList()
 		}
-		//For now, only accept letters/digits as Atom/Var names
-		if !unicode.IsLetter(r1) && !unicode.IsDigit(r1) && r1 != '_'{
+		if !checkValidAtomVar(r1) {
 			if unicode.IsSpace(r1) {
 				r1, err = r.skipCommentsAndSpaces()
 			}
@@ -203,8 +202,14 @@ func (r *Reader) ReadTerms() (prolog.Terms, error) {
 	
 }
 
-func (r *Reader) readCompound(s []rune) (prolog.Term, error) {
-	functor := string(s)
+func (r *Reader) checkBuiltin(ct prolog.Compound_Term, err error) (prolog.Term, error) {
+	if builtin, ok := builtins[ct.Pred]; ok {
+		ct.Pred = builtin.Pred
+	}
+	return ct, err
+}
+
+func (r *Reader) readCompound(functor string) (prolog.Term, error) {
 	args, err := r.ReadTerms()
 	if err != nil {
 		return nil, err
@@ -218,7 +223,7 @@ func (r *Reader) readCompound(s []rune) (prolog.Term, error) {
 	_, err = r.readRune()
 	predicate := prolog.Predicate{functor, len(args)}
 	compound := prolog.Compound_Term{predicate, args}
-	return compound, err
+	return r.checkBuiltin(compound, err)
 }
 
 func (r *Reader) readList() (prolog.Term, error) {
@@ -273,6 +278,15 @@ func (r *Reader) readRune() (rune, error) {
 	r.column++
 	r.Last_Read = r1
 	return r1, err
+}
+
+// TODO: '=' and '+' added for simplicity for now, need extended check
+func checkValidAtomVar(r rune) bool {
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '=' || r == '+'
+}
+
+func checkValidFunctor(s []rune) bool {
+	return len(s) != 0 && !unicode.IsUpper(s[0])
 }
 
 // findNext throws an error unless the next rune

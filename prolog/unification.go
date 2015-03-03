@@ -1,9 +1,9 @@
 
 package prolog
 
-func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Alias) {
+func unify(args1 []Term, args2 []Term, aliases Bindings) (unified bool, newalias Bindings) {
 
-	newalias = make(Alias)
+	newalias = make(Bindings)
 	for k,v := range aliases {
 		newalias[k] = v
 	}
@@ -25,7 +25,7 @@ func unify(args1 []Term, args2 []Term, aliases Alias) (unified bool, newalias Al
 	return true, newalias
 }
 
-func (a Atom) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (a Atom) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
 	switch t.(type){
 	case Atom:
 		if a.Value == t.(Atom).Value {
@@ -37,14 +37,14 @@ func (a Atom) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	return false, nil
 }
 
-func (v *Var) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (v *Var) UnifyWith(t Term, a Bindings) (unified bool, newalias Bindings) {
 	// already unified
-	if bound, contains := alias[v]; contains {
-		return bound.UnifyWith(t, alias)
+	if bound, contains := a[v]; contains {
+		return bound.UnifyWith(t, a)
 	}
 	// TODO: anonymous vars are all the same atm. Give them an identifier?
 	if v.Name[0] == '_' {
-		return true, alias
+		return true, a
 	}
 	switch t.(type){
 	case Atom:
@@ -55,12 +55,12 @@ func (v *Var) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	case *Var:
 		// TODO: nothing? you sure?
 	}
-	newalias = make(Alias)
+	newalias = make(Bindings)
 	newalias[v] = t
 	return true, newalias
 }
 
-func (c Compound_Term) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (c Compound_Term) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
 	switch t.(type){
 	case Compound_Term:
 		ct := t.(Compound_Term)
@@ -73,7 +73,7 @@ func (c Compound_Term) UnifyWith(t Term, alias Alias) (unified bool, newalias Al
 	return false, nil
 }
 
-func (l List) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
+func (l List) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
 	switch t.(type){
 	case List:
 		// This workaround is needed because RESERVED doesn't unify
@@ -87,11 +87,11 @@ func (l List) UnifyWith(t Term, alias Alias) (unified bool, newalias Alias) {
 	return false, nil
 }
 
-func (v VarTemplate) UnifyWith(t Term, alias Alias) (bool, Alias) {
+func (v VarTemplate) UnifyWith(t Term, alias Bindings) (bool, Bindings) {
 	return false, nil
 }
 
-func updateAlias(aliases Alias, updates Alias) (clash bool) {
+func updateAlias(aliases Bindings, updates Bindings) (clash bool) {
 
 	for k,v := range updates {
 		if av, ok := aliases[k]; ok {

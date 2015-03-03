@@ -17,7 +17,7 @@ var unifytests = []struct {
 
 func TestUnification(t *testing.T) {
 	for _, tt := range unifytests {
-		alias := make(prolog.Alias)
+		alias := make(map[*prolog.Var]prolog.Term)
 		terms := parseQuery(tt.s)
 		term1, term2 := terms[0], terms[1]
 		unifies, _ := term1.UnifyWith(term2, alias)

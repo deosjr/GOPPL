@@ -83,7 +83,7 @@ func REPL() {
 		s.Split(bufio.ScanRunes)
 		ANSWERS:
 		for result := range node.Answer {
-			alias := result.A
+			alias := result.Alias
 			if result.Err == prolog.Notification {
 				break
 			}
