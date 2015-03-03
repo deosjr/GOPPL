@@ -2,6 +2,8 @@
 package memory
 
 import (
+	"strconv"
+
 	"GOPPL/prolog"
 )
 
@@ -25,7 +27,7 @@ func InitBuiltIns() {
 	//	\=/2 as not(UNIFY)
 
 	//	is/2 as IS
-	extralogical[prolog.Predicate{"IS",2}] = is 
+	extralogical[prolog.Predicate{"is",2}] = is 
 
 	// TODO: is this definition necessary?
 	// Lists as LIST/2 using prolog.Atom EMPTYLIST as [] and RESERVED as end of list
@@ -41,31 +43,35 @@ func InitBuiltIns() {
 }
 
 func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-/*	if len(terms) != 2 {
+	if len(terms) != 2 {
 		return nil
 	}
 	x, y := terms[0], terms[1]
-	xassign, err := evaluate(y, a)
+	xassign, err := prolog.Evaluate(y, a)
 	if err != nil {
 		// y was insufficiently instantiated
+		panic(err)
 		return nil
 	}
-	xvalue, err := evaluate(x, a)
+	xvalue, err := prolog.Evaluate(x, a)
 	switch err {
-	case xisavar:
-		update := make(alias)
-		update[x] = xassign
-		clash := updateAlias(a, update)
+	case prolog.InstantiationError:
+		v, ok := x.(*prolog.Var)
+		if !ok {
+			panic(err)
+			return nil
+		}
+		update := make(prolog.Bindings)
+		update[v] = prolog.Atom{strconv.FormatInt(xassign, 10)}
+		clash := prolog.UpdateAlias(a, update)
 		if clash {
 			return nil
 		}
+		return a
 	case nil: // x is an expression with no vars
-
+		if xvalue == xassign {
+			return a
+		}
 	}
-	
-*/	return nil
-}
-
-func evaluate(t prolog.Term, a prolog.Bindings) (int64, error) {
-	return 0, nil
+	return nil
 }

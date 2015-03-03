@@ -280,9 +280,9 @@ func (r *Reader) readRune() (rune, error) {
 	return r1, err
 }
 
-// TODO: '=' and '+' added for simplicity for now, need extended check
+// TODO: '=+-*/' added for simplicity for now, need extended check
 func checkValidAtomVar(r rune) bool {
-	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '=' || r == '+'
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '=' || r == '+' || r == '-' || r == '*' || r == '/'
 }
 
 func checkValidFunctor(s []rune) bool {

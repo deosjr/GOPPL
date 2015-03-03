@@ -101,7 +101,7 @@ func prepareExplore(term Compound_Term, aliases Bindings) (Bindings, []*Var) {
 }
 
 func (node *searchnode) exploreFurther(new_alias Bindings, al Bindings, scope []*Var, newterms Terms) {
-	clash := updateAlias(new_alias, al)
+	clash := UpdateAlias(new_alias, al)
 	if clash { 
 		node.notifySelf()
 		return
@@ -116,6 +116,9 @@ func (node *searchnode) exploreFunction(f func(Terms, Bindings) Bindings, term C
 	node.wait()
 	new_alias, scope := prepareExplore(term, aliases)
 	al := f(term.Args, aliases)
+	if al == nil {
+		return
+	}
 	node.exploreFurther(new_alias, al, scope, terms)
 }
 
