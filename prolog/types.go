@@ -25,6 +25,7 @@ type Term interface {
 	substituteVars(Bindings, []*Var) Term
 }
 
+// TODO: separate int Atom
 type Atom struct {
 	Value string
 }

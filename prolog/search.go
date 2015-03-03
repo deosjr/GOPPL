@@ -58,8 +58,12 @@ type result struct {
 
 func StartDFS(query Terms) *searchnode {
 	no_alias := make(Bindings)
+	return ContinueDFS(query, no_alias)
+}
+
+func ContinueDFS(query Terms, alias Bindings) *searchnode {
 	startnode := newNode(query)
-	go startnode.dfs(no_alias)
+	go startnode.dfs(alias)
 	startnode.Notify()
 	return startnode
 }

@@ -7,7 +7,7 @@ import (
 	"GOPPL/prolog"
 )
 
-var builtins = make( map[prolog.Predicate] prolog.Compound_Term)
+var builtins = make( map[prolog.Predicate] prolog.Predicate)
 
 //TODO: suppress these by default when printing memory 
 func InitBuiltIns() {
@@ -15,16 +15,22 @@ func InitBuiltIns() {
 	extralogical := prolog.Extralogical
 
 	x := prolog.VarTemplate{"X"}
+	y := prolog.VarTemplate{"Y"}
 	anon := prolog.VarTemplate{"_"}
 
 	//	=/2 as UNIFY(X,X)
-	unify := prolog.Compound_Term{prolog.Predicate{"UNIFY",2}, prolog.Terms{x, x}}
+	unify := prolog.Predicate{"UNIFY",2}
 	builtins[prolog.Predicate{"=",2}] = unify
-	addData(unify.Pred, prolog.Rule{unify.Args, prolog.Terms{}})
+	addData(unify, prolog.Rule{prolog.Terms{x, x}, prolog.Terms{}})
 
-	//TODO:
-	//	not/1
-	//	\=/2 as not(UNIFY)
+	//	not/1, also \+ /1
+	extralogical[prolog.Predicate{"not",1}] = not
+	builtins[prolog.Predicate{"\\+",1}] = prolog.Predicate{"not",1}
+
+	//	\= /2 as not(UNIFY)
+	notunify := prolog.Predicate{"NOTUNIFY",2}
+	builtins[prolog.Predicate{"\\=",2}] = notunify
+	addData(notunify, prolog.Rule{prolog.Terms{x, y}, prolog.Terms{prolog.Compound_Term{prolog.Predicate{"not",1}, prolog.Terms{prolog.Compound_Term{unify, prolog.Terms{x, y}}}}}})
 
 	//	is/2 as IS
 	extralogical[prolog.Predicate{"is",2}] = is 
@@ -72,6 +78,25 @@ func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 		if xvalue == xassign {
 			return a
 		}
+	}
+	return nil
+}
+
+// TODO: variables in terms[0] have to be bound
+func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	if len(terms) != 1 {
+		return nil
+	}
+	node := prolog.ContinueDFS(terms, a)
+	found_nothing := true
+	for result := range node.Answer {
+		if result.Err == prolog.Notification {
+			break
+		}
+		found_nothing = false
+	}
+	if found_nothing {
+		return a
 	}
 	return nil
 }

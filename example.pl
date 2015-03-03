@@ -11,6 +11,9 @@ dontCare(_).
 % uni(X) := X = a.						% Infix notation cant be parsed yet
 uni(X) :- =(X,a).						% =/2 is an alias for UNIFY(X,X)
 
+never(X) :- =(X,a), \=(X,a).
+always(X) :- =(X,a), \=(X,b).
+
 % five(X) :- Y = 3, X is 2 + Y.			
 five(X) :- =(Y,3), is(X, +(2,Y)).		% The is/2 predicate is an extralogical
 equal(X) :- =(Y,3), is(X, Y).			% function
