@@ -232,9 +232,11 @@ func cleanUpVarsOutOfScope(to_clean Bindings, scope []*Var) Bindings {
 	clean := make(Bindings)
 	for _, v := range scope {	
 		temp := v
-		Loop: for {
+		LOOP: 
+		for {
 			value, ok := to_clean[temp]
 			if !ok {
+				clean[v] = temp
 				break
 			}
 			switch value.(type) {
@@ -242,59 +244,14 @@ func cleanUpVarsOutOfScope(to_clean Bindings, scope []*Var) Bindings {
 				temp = value.(*Var)
 			case Atom:
 				clean[v] = value
-				break Loop
+				break LOOP
 			case Compound:
-				clean[v] = value.(Compound).substituteVars(to_clean, scope)
-				break Loop
+				clean[v] = value.(Compound).substituteVars(to_clean)
+				break LOOP
 			}
 		}
 	}
 	return clean
-}
-
-func (a Atom) substituteVars(al Bindings, scope []*Var) Term {
-	return a
-}
-
-func (v VarTemplate) substituteVars(a Bindings, scope []*Var) Term {
-	return v
-}
-
-func (v *Var) substituteVars(a Bindings, scope []*Var) Term {
-	v1, ok := a[v]
-	if inScope(v, scope) || !ok {
-		return v
-	}
-	//var not in scope but bound in a
-	switch v1.(type) {
-	case Compound:
-		return v1.(Compound).substituteVars(a, scope)
-	}
-	return v1
-}
-
-func (c Compound_Term) substituteVars(a Bindings, scope []*Var) Term {
-	
-	sub_args := Terms{}
-	for _,term := range c.GetArgs() {
-		sub := term.substituteVars(a, scope)
-		sub_args = append(sub_args, sub)
-	}
-	return Compound_Term{c.GetPredicate(), sub_args}
-}
-
-func (n Nil) substituteVars(a Bindings, scope []*Var) Term {
-	return n
-}
-
-func (c Cons) substituteVars(a Bindings, scope []*Var) Term {
-	
-	sub_args := Terms{}
-	for _,term := range c.GetArgs() {
-		sub := term.substituteVars(a, scope)
-		sub_args = append(sub_args, sub)
-	}
-	return Cons{Compound_Term{c.GetPredicate(), sub_args}, sub_args[0], sub_args[1]}
 }
 
 func VarsInTermArgs(terms Terms) []*Var {
@@ -303,18 +260,11 @@ func VarsInTermArgs(terms Terms) []*Var {
 		switch term.(type) {
 		case *Var:
 			vars = append(vars, term.(*Var))
+		case Cons:
+			vars = append(vars, VarsInTermArgs(term.(Cons).GetArgs())...)
 		case Compound_Term:
 			vars = append(vars, VarsInTermArgs(term.(Compound_Term).GetArgs())...)
 		}
 	}
 	return vars
-}
-
-func inScope(v *Var, scope []*Var) bool {
-	for _, value := range scope {
-		if value == v {
-			return true
-		}
-	}
-	return false
 }

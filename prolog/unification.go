@@ -101,7 +101,9 @@ func UpdateAlias(aliases Bindings, updates Bindings) (clash bool) {
 			case *Var:
 				break
 			default:
-				if !av.compareTo(v) {
+				// TODO: This is the only place compareTo is used. 
+				// Change to accept aliases and updates and compare/substitute?
+				if !v.compareTo(av) {
 					return true
 				}
 			}
@@ -109,6 +111,46 @@ func UpdateAlias(aliases Bindings, updates Bindings) (clash bool) {
 		aliases[k] = v
 	}
 	return false
+}
+
+func (a Atom) substituteVars(al Bindings) Term {
+	return a
+}
+
+func (v VarTemplate) substituteVars(a Bindings) Term {
+	return v
+}
+
+func (v *Var) substituteVars(a Bindings) Term {
+	v1, ok := a[v]
+	if !ok {
+		return v
+	}
+	return v1.substituteVars(a)
+}
+
+func (c Compound_Term) substituteVars(a Bindings) Term {
+	
+	sub_args := Terms{}
+	for _,term := range c.GetArgs() {
+		sub := term.substituteVars(a)
+		sub_args = append(sub_args, sub)
+	}
+	return Compound_Term{c.GetPredicate(), sub_args}
+}
+
+func (n Nil) substituteVars(a Bindings) Term {
+	return n
+}
+
+func (c Cons) substituteVars(a Bindings) Term {
+	
+	sub_args := Terms{}
+	for _,term := range c.GetArgs() {
+		sub := term.substituteVars(a)
+		sub_args = append(sub_args, sub)
+	}
+	return Cons{Compound_Term{c.GetPredicate(), sub_args}, sub_args[0], sub_args[1]}
 }
 
 var InstantiationError error = errors.New("arguments insufficiently instantiated")

@@ -12,18 +12,20 @@ var unifytests = []struct {
 	alias map[string]string
 	result map[string]string
 }{
-	{"a, a.", nil, nil},
-	{"X, 1.", nil, map[string]string{"X":"1"}},
-	{"X, Y.", map[string]string{"X":"a", "Y":"a"}, nil},
-	{"[X], [1].", nil, map[string]string{"X":"1"}},
-	{"[X,Y], [1,2].", nil, map[string]string{"X":"1", "Y":"2"}},
-	{"p([0,1], [1]), p([0|A], A).", nil, map[string]string{"A":"[1]"}},
-	{"p(A, [1|C]), p([0|B], B).", map[string]string{"A":"[0,1]", "C":"[]"}, map[string]string{"B":"[1]"}},
+	{"a, a", nil, nil},
+	{"X, 1", nil, map[string]string{"X":"1"}},
+	{"X, Y", map[string]string{"X":"a", "Y":"a"}, nil},
+	{"[X], [1]", nil, map[string]string{"X":"1"}},
+	{"[X,Y], [1,2]", nil, map[string]string{"X":"1", "Y":"2"}},
+	{"p([0,1], [1]), p([0|A], A)", nil, map[string]string{"A":"[1]"}},
+	// TODO: change UpdateAlias or substituteVars or something else:
+	// unifies but clashes: {B:[1], C:[]} and {B:[1|C]}
+	{"p(A, [1|C]), p([0|B], B)", map[string]string{"A":"[0,1]", "C":"[]"}, map[string]string{"B":"[1]"}},
 }
 
 func TestDoesUnify(t *testing.T) {
 	for _, tt := range unifytests {
-		terms := parseQuery(tt.s)
+		terms := parseQuery(tt.s + ".")
 		term1, term2 := terms[0], terms[1]
 		alias := createTestAlias(terms, tt.alias)
 		unifies, resulting_bindings := term1.UnifyWith(term2, alias)
@@ -51,14 +53,14 @@ var notunifytests = []struct {
 	s string
 	alias map[string]string
 }{
-	{"a, b.", nil},
-	{"[X], [1,2].", nil},
-	{"X, Y.", map[string]string{"X":"a", "Y":"b"}},
+	{"a, b", nil},
+	{"[X], [1,2]", nil},
+	{"X, Y", map[string]string{"X":"a", "Y":"b"}},
 }
 
 func TestDoesNotUnify(t *testing.T) {
 	for _, tt := range notunifytests {
-		terms := parseQuery(tt.s)
+		terms := parseQuery(tt.s + ".")
 		term1, term2 := terms[0], terms[1]
 		alias := createTestAlias(terms, tt.alias)
 		unifies, _ := term1.UnifyWith(term2, alias)
@@ -89,6 +91,5 @@ func findVarInTerms(vs string, vars []*prolog.Var) *prolog.Var {
 			return v
 		}
 	}
-	// ACTUAL TODO: fix prolog.VarsInTermArgs
-	return nil //TODO: panic("Error in unit test: variable " + vs + " not in terms!")
+	panic("Error in unit test: variable " + vs + " not in terms!")
 }

@@ -1,7 +1,6 @@
 
 package prolog
 
-//TODO: 'builtin' boolean field?
 type Rule struct {
 	Head Terms
 	Body Terms
@@ -22,7 +21,7 @@ type Term interface {
 	UnifyWith(Term, Bindings) (bool, Bindings)
 	CreateVars(tempBindings) (Term, tempBindings)
 	compareTo(Term) bool
-	substituteVars(Bindings, []*Var) Term
+	substituteVars(Bindings) Term
 }
 
 // TODO: separate int Atom
