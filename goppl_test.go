@@ -13,11 +13,10 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 	node :=  prolog.StartDFS(query)
 	for _, bindings := range testAnswers {
 		result, open := <- node.Answer
-		alias := result.Alias
 		if !open {
 			t.Errorf("Not enough answers")
 		}
-		for k, v := range alias {
+		for k, v := range result.Alias {
 			if _, contains := bindings[k.String()]; !contains {
 				t.Errorf("Out of scope variable %s in alias", k.String())
 			} else if v.String() != bindings[k.String()] {
@@ -90,3 +89,13 @@ func TestLists(t *testing.T) {
 	}
 	evaluateQuery(t, query, testAnswers)
 }
+
+/** TODO: evaluateQueryTrue
+func TestDifferenceLists(t *testing.T) {
+	memory.InitFromFile("tests/difference_lists_test.pl")
+	memory.InitBuiltIns()
+	evaluateQueryTrue(t, parseQuery("pal([0],[])."))
+	evaluateQueryTrue(t, parseQuery("pal([1,0,1],[])."))
+	evaluateQueryTrue(t, parseQuery("pal([1,1,1,1,1],[])."))
+}
+*/

@@ -100,7 +100,7 @@ func prepareExplore(term Compound_Term, aliases Bindings) (Bindings, []*Var) {
 		new_alias[k] = v
 		scope = append(scope, k)
 	}
-	scope = append(scope, varsInTermArgs(term.GetArgs())...)
+	scope = append(scope, VarsInTermArgs(term.GetArgs())...)
 	return new_alias, scope
 }
 
@@ -297,14 +297,14 @@ func (c Cons) substituteVars(a Bindings, scope []*Var) Term {
 	return Cons{Compound_Term{c.GetPredicate(), sub_args}, sub_args[0], sub_args[1]}
 }
 
-func varsInTermArgs(terms Terms) []*Var {
+func VarsInTermArgs(terms Terms) []*Var {
 	vars := []*Var{}
-	for _,term := range terms {
+	for _, term := range terms {
 		switch term.(type) {
 		case *Var:
 			vars = append(vars, term.(*Var))
 		case Compound_Term:
-			vars = append(vars, varsInTermArgs(term.(Compound_Term).GetArgs())...)
+			vars = append(vars, VarsInTermArgs(term.(Compound_Term).GetArgs())...)
 		}
 	}
 	return vars
