@@ -33,7 +33,7 @@ append(A,B,B,C,A,C).
 %int(0) .								%% Stop not immediately following is a syntax error
 	
 whyWouldYou(X) :- int(X). doThis(0).	%% Newlines are ignored, no problem.
-%zeroArguments.							% For now, all rules start with a compound term
+zeroArguments.							% Query "zeroArguments" doesnt parse correctly yet
 	
 canWeDoThis(X, Y) :-					%% Lists and predicates over multiple lines
 	areInteger([						%% parse just fine.

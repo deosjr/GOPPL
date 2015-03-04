@@ -9,43 +9,35 @@ import (
 
 var builtins = make( map[prolog.Predicate] prolog.Predicate)
 
-//TODO: suppress these by default when printing memory 
+func pred(functor string, arity int) prolog.Predicate {
+	return prolog.Predicate{functor, arity}
+}
+
 func InitBuiltIns() {
 
 	extralogical := prolog.Extralogical
+	extralogical[pred("listing", 0)] = listing
 
 	x := prolog.VarTemplate{"X"}
 	y := prolog.VarTemplate{"Y"}
-	anon := prolog.VarTemplate{"_"}
 
 	//	=/2 as UNIFY(X,X)
-	unify := prolog.Predicate{"UNIFY",2}
-	builtins[prolog.Predicate{"=",2}] = unify
+	unify := pred("UNIFY",2)
+	builtins[pred("=",2)] = unify
 	addData(unify, prolog.Rule{prolog.Terms{x, x}, prolog.Terms{}})
 
 	//	not/1, also \+ /1
-	extralogical[prolog.Predicate{"not",1}] = not
-	builtins[prolog.Predicate{"\\+",1}] = prolog.Predicate{"not",1}
+	extralogical[pred("not",1)] = not
+	builtins[pred("\\+",1)] = pred("not",1)
 
 	//	\= /2 as not(UNIFY)
-	notunify := prolog.Predicate{"NOTUNIFY",2}
-	builtins[prolog.Predicate{"\\=",2}] = notunify
-	addData(notunify, prolog.Rule{prolog.Terms{x, y}, prolog.Terms{prolog.Compound_Term{prolog.Predicate{"not",1}, prolog.Terms{prolog.Compound_Term{unify, prolog.Terms{x, y}}}}}})
+	notunify := pred("NOTUNIFY",2)
+	builtins[pred("\\=",2)] = notunify
+	addData(notunify, prolog.Rule{prolog.Terms{x, y}, prolog.Terms{prolog.Compound_Term{pred("not",1), prolog.Terms{prolog.Compound_Term{unify, prolog.Terms{x, y}}}}}})
 
 	//	is/2 as IS
-	extralogical[prolog.Predicate{"is",2}] = is 
-
-	// TODO: is this definition necessary?
-	// Lists as LIST/2 using prolog.Atom EMPTYLIST as [] and RESERVED as end of list
-	list := prolog.Predicate{"LIST",2}
+	extralogical[pred("is",2)] = is 
 	
-	// LIST([], RESERVED)
-	addData(list, prolog.Rule{prolog.Terms{prolog.Atom{"EMPTYLIST"}, prolog.Atom{"RESERVED"}}, prolog.Terms{}})
-	
-	// LIST(_, LIST(_,_))
-	tlist := prolog.CreateList(prolog.Terms{anon, anon}, prolog.Empty_List)
-	addData(list, prolog.Rule{prolog.Terms{anon, tlist}, prolog.Terms{}})
-
 }
 
 func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
@@ -98,5 +90,11 @@ func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	if found_nothing {
 		return a
 	}
+	return nil
+}
+
+// TODO: parse listing/0 (or 0 arity 'compound' terms in general)
+func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	printMemory()	
 	return nil
 }

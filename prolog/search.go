@@ -213,14 +213,18 @@ func (c Compound_Term) CreateVars(va tempBindings) (Term, tempBindings) {
 	return Compound_Term{c.GetPredicate(), renamed_args}, va
 }
 
-func (l List) CreateVars(va tempBindings) (Term, tempBindings) {
+func (n Nil) CreateVars(va tempBindings) (Term, tempBindings) {
+	return n, va
+}
+
+func (c Cons) CreateVars(va tempBindings) (Term, tempBindings) {
 	renamed_args := Terms{}
-	for _, ot := range l.GetArgs() {
+	for _, ot := range c.GetArgs() {
 		vt, va := ot.CreateVars( va)
 		va = va
 		renamed_args = append(renamed_args, vt)
 	}
-	return List{Compound_Term{l.GetPredicate(), renamed_args}}, va
+	return Cons{Compound_Term{c.GetPredicate(), renamed_args}, renamed_args[0], renamed_args[1]}, va
 }
 
 func cleanUpVarsOutOfScope(to_clean Bindings, scope []*Var) Bindings {
@@ -279,14 +283,18 @@ func (c Compound_Term) substituteVars(a Bindings, scope []*Var) Term {
 	return Compound_Term{c.GetPredicate(), sub_args}
 }
 
-func (l List) substituteVars(a Bindings, scope []*Var) Term {
+func (n Nil) substituteVars(a Bindings, scope []*Var) Term {
+	return n
+}
+
+func (c Cons) substituteVars(a Bindings, scope []*Var) Term {
 	
 	sub_args := Terms{}
-	for _,term := range l.GetArgs() {
+	for _,term := range c.GetArgs() {
 		sub := term.substituteVars(a, scope)
 		sub_args = append(sub_args, sub)
 	}
-	return List{Compound_Term{l.GetPredicate(), sub_args}}
+	return Cons{Compound_Term{c.GetPredicate(), sub_args}, sub_args[0], sub_args[1]}
 }
 
 func varsInTermArgs(terms Terms) []*Var {

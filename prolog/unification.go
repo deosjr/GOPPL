@@ -51,15 +51,6 @@ func (v *Var) UnifyWith(t Term, a Bindings) (unified bool, newalias Bindings) {
 	if v.Name[0] == '_' {
 		return true, a
 	}
-	switch t.(type){
-	case Atom:
-		// The RESERVED atom never unifies
-		if t.(Atom).Value == "RESERVED" {
-			return false, nil
-		}	
-	case *Var:
-		// TODO: nothing? you sure?
-	}
 	newalias = make(Bindings)
 	newalias[v] = t
 	return true, newalias
@@ -78,16 +69,22 @@ func (c Compound_Term) UnifyWith(t Term, alias Bindings) (unified bool, newalias
 	return false, nil
 }
 
-func (l List) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
+func (c Cons) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
 	switch t.(type){
-	case List:
-		// This workaround is needed because RESERVED doesn't unify
-		if l.compareTo(Empty_List) && t.(List).compareTo(Empty_List) {
-			return true, alias
-		}
-		return unify(l.GetArgs(), t.(List).GetArgs(), alias)
+	case Cons:
+		return unify(c.GetArgs(), t.(List).GetArgs(), alias)
 	case *Var:
-		return t.UnifyWith(l, alias)
+		return t.UnifyWith(c, alias)
+	}
+	return false, nil
+}
+
+func (n Nil) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
+	switch t.(type){
+	case Nil:
+		return true, newalias
+	case *Var:
+		return t.UnifyWith(n, alias)
 	}
 	return false, nil
 }

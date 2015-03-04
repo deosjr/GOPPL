@@ -84,9 +84,9 @@ func TestLists(t *testing.T) {
 		{"L": "[1,2,3,4,5]", "X": "[]"},
 	}
 	evaluateQuery(t, query, testAnswers)
-	query = parseQuery("length([1,5,a,1,b,10], N).")
+	query = parseQuery("length([a, [b, c, d], e, [f | g], h], N).")
 	testAnswers =  []map[string]string{
-		{"N":"6"},
+		{"N":"5"},
 	}
 	evaluateQuery(t, query, testAnswers)
 }

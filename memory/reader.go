@@ -92,13 +92,23 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	if err != nil {
 		return prolog.Predicate{}, prolog.Rule{}, err
 	}
-	p, _ := term.(prolog.Compound_Term)
 	
 	if r.Last_Read == r.Stop {
-		predicate := p.GetPredicate()
-		rule := prolog.Rule{p.GetArgs(), prolog.Terms{}}
-		return predicate, rule, nil
+		switch term.(type){
+		case prolog.Atom:
+			predicate := prolog.Predicate{term.(prolog.Atom).Value, 0}
+			rule := prolog.Rule{prolog.Terms{}, prolog.Terms{}}
+			return predicate, rule, nil
+		case prolog.Compound_Term:
+			p := term.(prolog.Compound_Term)
+			predicate := p.GetPredicate()
+			rule := prolog.Rule{p.GetArgs(), prolog.Terms{}}
+			return predicate, rule, nil
+		default:
+			return prolog.Predicate{}, prolog.Rule{}, err
+		}
 	}
+	p, _ := term.(prolog.Compound_Term)
 	
 	err = r.readTurnstile()
 	if err != nil {

@@ -2,43 +2,53 @@
 package prolog
 
 // List Predicate = {"LIST", 2}
-type List struct {
+type List interface {
+	Compound
+	head() Term
+	tail() Term
+	isEmpty() bool
+}
+
+type Cons struct {
+	Compound_Term
+	h Term
+	t Term 		// can be variable, not always a List
+}
+
+type Nil struct {
 	Compound_Term
 }
 
-var Empty_List List = List{Compound_Term{Predicate{"LIST",2}, Terms{Atom{"EMPTYLIST"}, Atom{"RESERVED"}}}}
+var Empty_List List = Nil{}
 
-func (l List) head() Term {
-	t := l.Args[0]
-	if l.isEmpty() {
-		panic("Attempted to get head of []")	//TODO: better solution
-	}
-	return t
+func (c Cons) head() Term {
+	return c.h
 }
 
-func (l List) tail() Term {
-	if l.isEmpty() {
-		panic("Attempted to get tail of []")	//TODO: better solution
-	}
-	return l.Args[1]
+func (n Nil) head() Term {
+	panic("Attempted to get head of []")
 }
 
-func (l List) isEmpty() bool {
-	t := l.Args[0]
-	switch t.(type) {
-	case Atom:
-		if t.(Atom).Value == "EMPTYLIST" {
-			return true
-		}
-	}
+func (c Cons) tail() Term {
+	return c.t
+}
+
+func (n Nil) tail() Term {
+	panic("Attempted to get tail of []")
+}
+
+func (c Cons) isEmpty() bool {
 	return false
+}
+
+func (n Nil) isEmpty() bool {
+	return true
 }
 
 func CreateList(heads Terms, tail Term) Term {
 	list := tail
 	for i := len(heads)-1; i >= 0; i-- {
-		list = List{Compound_Term{Predicate{"LIST",2}, Terms{heads[i], list}}}
+		list = Cons{Compound_Term{Predicate{"LIST",2}, Terms{heads[i], list}}, heads[i], list}
 	}
 	return list
 }
-

@@ -76,8 +76,14 @@ func varTemplates(terms prolog.Terms) []prolog.VarTemplate {
 }
 */
 
-func PrintMemory() {
+func printMemory() {
+	RULES:
 	for k,v := range prolog.Memory {
+		for _,v := range builtins {
+			if k == v {
+				continue RULES
+			}
+		}
 		for _,rule := range v {
 			fmt.Printf("%s(", k.Functor)
 			for i,h := range rule.Head {

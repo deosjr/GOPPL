@@ -68,13 +68,10 @@ func parseQuery(q string) prolog.Terms {
 func REPL() {
 
 	for {
-		//memory.PrintMemory()	// TODO: parse listing/1
 		fmt.Print("?- ")
 		s := bufio.NewScanner(os.Stdin)
 		s.Scan()
 		input := s.Text()
-		//TODO: parse something other than query, such as exit/1
-		//		or [filename] to load a file (rather consult/1)
 		
 		query := parseQuery(input)
 		node := prolog.StartDFS(query)
