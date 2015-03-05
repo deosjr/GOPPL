@@ -192,6 +192,10 @@ func (a Atom) CreateVars(va tempBindings) (Term, tempBindings) {
 	return a, va
 }
 
+func (i Int) CreateVars(va tempBindings) (Term, tempBindings) {
+	return i, va
+}
+
 func (v *Var) CreateVars(va tempBindings) (Term, tempBindings) {
 	return v, va
 }

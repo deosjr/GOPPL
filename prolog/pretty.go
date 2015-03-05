@@ -1,7 +1,8 @@
 
 package prolog
 
-func (a Atom) String() string{ return a.Value}
+func (a Atom) String() string{ return a.Value()}
+func (i Int) String() string{ return i.Value()}
 
 func (v *Var) String() string { return v.Name }
 func (v VarTemplate) String() string { return v.Name }

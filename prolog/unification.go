@@ -3,7 +3,6 @@ package prolog
 
 import (
 	"errors"
-	"strconv"
 )
 
 func unify(args1 []Term, args2 []Term, aliases Bindings) (unified bool, newalias Bindings) {
@@ -32,8 +31,8 @@ func unify(args1 []Term, args2 []Term, aliases Bindings) (unified bool, newalias
 
 func (a Atom) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
 	switch t.(type){
-	case Atom:
-		if a.Value == t.(Atom).Value {
+	case Atomic:
+		if a.Value() == t.(Atomic).Value() {
 			return true, newalias
 		}
 	case *Var:
@@ -167,11 +166,10 @@ func (c Cons) SubstituteVars(a Bindings) Term {
 
 var InstantiationError error = errors.New("arguments insufficiently instantiated")
 
-func Evaluate(t Term, a Bindings) (int64, error) {
+func Evaluate(t Term, a Bindings) (int, error) {
 	switch t.(type) {
-	case Atom:
-		i, err := strconv.ParseInt(t.(Atom).Value, 10, 64)
-		return i, err
+	case Int:
+		return t.(Int).IntValue(), nil
 	case *Var:
 		value, ok := a[t.(*Var)]
 		if ok {

@@ -1,6 +1,8 @@
 
 package prolog
 
+import "strconv"
+
 type Rule struct {
 	Head Terms
 	Body Terms
@@ -24,9 +26,37 @@ type Term interface {
 	SubstituteVars(Bindings) Term
 }
 
-// TODO: separate int Atom
+type Atomic interface {
+	Term
+	Value() string
+}
+
 type Atom struct {
-	Value string
+	value string
+}
+
+type Int struct {
+	Atom
+	intvalue int
+}
+
+func GetInt(i int) Int {
+	return Int{Atom{strconv.Itoa(i)}, i}
+}
+
+func GetAtomic(s string) Atomic {
+	if i, err := strconv.Atoi(s); err == nil {
+		return Int{Atom{s}, i}
+	}
+	return Atom{s}
+}
+
+func (a Atom) Value() string {
+	return a.value
+}
+
+func (i Int) IntValue() int {
+	return i.intvalue
 }
 
 type Var struct {
@@ -58,7 +88,7 @@ func (c Compound_Term) GetArgs() Terms {
 
 func (a Atom) compareTo(t Term) bool {
 	switch t.(type) {
-	case Atom:
+	case Atomic:
 		return a == t
 	}
 	return false

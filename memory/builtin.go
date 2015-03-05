@@ -3,7 +3,6 @@ package memory
 
 import (
 	"fmt"
-	"strconv"
 
 	"GOPPL/prolog"
 )
@@ -43,7 +42,7 @@ func InitBuiltIns() {
 	extralogical[pred("write",1)] = write
 	extralogical[pred("writeln",1)] = writeln
 
-	// DCG builtin predicate (might want to just rewrite better?)
+	// DCG builtin predicate (TODO: might want to just rewrite better?)
 	builtins[pred("C",3)] = pred("C",3)
 	addData(pred("C",3), prolog.Rule{prolog.Terms{prolog.CreateList(prolog.Terms{x},y),x,y}, prolog.Terms{}})
 }
@@ -68,7 +67,7 @@ func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 			return nil
 		}
 		update := make(prolog.Bindings)
-		update[v] = prolog.Atom{strconv.FormatInt(xassign, 10)}
+		update[v] = prolog.GetInt(xassign)
 		clash := prolog.UpdateAlias(a, update)
 		if clash {
 			return nil

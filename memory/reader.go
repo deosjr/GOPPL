@@ -97,7 +97,7 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	if r.Last_Read == r.Stop {
 		switch term.(type){
 		case prolog.Atom:
-			predicate := prolog.Predicate{term.(prolog.Atom).Value, 0}
+			predicate := prolog.Predicate{term.(prolog.Atom).Value(), 0}
 			rule := prolog.Rule{prolog.Terms{}, prolog.Terms{}}
 			return predicate, rule, nil
 		case prolog.Compound_Term:
@@ -159,7 +159,7 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 			if index == len(terms)-1 {
 				namei1 = endvar
 			}
-			pred := pred(t.(prolog.Atom).Value, 2)
+			pred := pred(t.(prolog.Atom).Value(), 2)
 			dcgterms = append(dcgterms, prolog.Compound_Term{pred, prolog.Terms{namei, namei1}})
 		case prolog.Nil:
 			// add =(namei, namei+1)
@@ -195,8 +195,9 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 			pred := pred(ct.GetPredicate().Functor, ct.GetPredicate().Arity + 2)
 			pargs := append(ct.GetArgs(), namei, namei1)
 			dcgterms = append(dcgterms, prolog.Compound_Term{pred, pargs})
-		case *prolog.Var:
-			// ???
+		case prolog.VarTemplate:
+			// TODO: syntax error right ???
+			return pred("",0), prolog.Rule{}, r.ThrowError(ErrSyntaxError)
 		}
 	}
 	rule := prolog.Rule{args, dcgterms}
@@ -355,7 +356,7 @@ func (r *Reader) readAtomVar(s []rune, err error) (prolog.Term, error) {
 	if unicode.IsUpper(s[0]) || s[0] == '_' {
 		return prolog.VarTemplate{string(s)}, err
 	}
-	return prolog.Atom{string(s)}, err
+	return prolog.GetAtomic(string(s)), err
 }
 
 func (r *Reader) readRune() (rune, error) {
