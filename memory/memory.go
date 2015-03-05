@@ -40,6 +40,7 @@ func InitFromFile(filename string) {
 			addData(pred, rule)
 		}
 	}
+	//printMemory()
 }
 
 /**

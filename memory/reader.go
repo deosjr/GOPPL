@@ -110,11 +110,10 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	}
 	p, _ := term.(prolog.Compound_Term)
 	
-	err = r.readTurnstile()
+	readfunction, err := r.readOperator()
 	if err != nil {
 		return prolog.Predicate{}, prolog.Rule{}, err
 	}
-	
 	terms, err := r.ReadTerms()
 	if err != nil {
 		return prolog.Predicate{}, prolog.Rule{}, err
@@ -125,20 +124,48 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 			return prolog.Predicate{}, prolog.Rule{}, err
 		}
 	}
+	return readfunction(p, terms)	
+}
+
+type readfunc func(prolog.Compound_Term, prolog.Terms)(prolog.Predicate, prolog.Rule, error)
+
+func (r *Reader) readRule(p prolog.Compound_Term, terms prolog.Terms) (prolog.Predicate, prolog.Rule, error) {
+	// TODO: syntax error on DCG escape {}
 	predicate := p.GetPredicate()
 	rule := prolog.Rule{p.GetArgs(), terms}
 	return predicate, rule, nil
-	
 }
 
-func (r *Reader) readTurnstile() error {
-	if ok, err := r.findNext(':', true); !ok || err != nil {
-		return r.ThrowError(ErrSyntaxError)
+func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Predicate, prolog.Rule, error) {
+	// TODO: parse DCG escape {}
+	// TODO: rewrite DCG to difference lists
+	predicate := p.GetPredicate()
+	rule := prolog.Rule{p.GetArgs(), terms}
+	return predicate, rule, nil
+}
+
+func (r *Reader) readOperator() (readfunc, error) {
+
+	r1, err := r.skipCommentsAndSpaces()
+	s := []rune{}
+	for {
+		if err != nil {
+			return nil, err
+		}
+		if r1 == ':' || r1 == '-' || r1 == '>' {
+			s = append(s, r1)
+			r1, err = r.readRune()
+		} else {
+			break
+		}
 	}
-	if ok, err := r.findNext('-', false); !ok || err != nil {
-		return r.ThrowError(ErrSyntaxError)
+	switch string(s){
+	case ":-":
+		return r.readRule, nil
+	case "-->":
+		return r.readDCG, nil
 	}
-	return nil
+	return nil, r.ThrowError(ErrSyntaxError)
 }
 
 // ReadTerm returns one Term
@@ -147,9 +174,6 @@ func (r *Reader) readTurnstile() error {
 func (r *Reader) ReadTerm() (prolog.Term, error) {
 
 	r1, err := r.skipCommentsAndSpaces()
-	if err != nil {
-		return nil, err
-	}
 	s := []rune{}
 	for {
 		if err != nil {
