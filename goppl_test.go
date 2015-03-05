@@ -45,6 +45,11 @@ func TestPerms(t *testing.T) {
 		{"X": "b", "Y": "b"},
 	}
 	evaluateQuery(t, query, testAnswers)
+	query = parseQuery("updateAliasProblem(X).")
+	testAnswers = []map[string]string{
+		{"X": "b"},
+	}
+	evaluateQuery(t, query, testAnswers)
 }
 
 func TestExample(t *testing.T) {
@@ -56,6 +61,16 @@ func TestExample(t *testing.T) {
 		{"X": "a"},
 		{"X": "b"},
 		{"X": "d"},
+	}
+	evaluateQuery(t, query, testAnswers)
+	query = parseQuery("p(X,Y).")
+	testAnswers = []map[string]string{
+		{"X": "1", "Y":"2"},
+	}
+	evaluateQuery(t, query, testAnswers)
+	query = parseQuery("test(EEN).")
+	testAnswers = []map[string]string{
+		{"EEN": "1"},
 	}
 	evaluateQuery(t, query, testAnswers)
 }

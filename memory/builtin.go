@@ -2,6 +2,7 @@
 package memory
 
 import (
+	"fmt"
 	"strconv"
 
 	"GOPPL/prolog"
@@ -37,7 +38,10 @@ func InitBuiltIns() {
 
 	//	is/2 as IS
 	extralogical[pred("is",2)] = is 
-	
+
+	// write and writeln
+	extralogical[pred("write",1)] = write
+	extralogical[pred("writeln",1)] = writeln
 }
 
 func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
@@ -93,8 +97,18 @@ func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	return nil
 }
 
+func write(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	fmt.Print(terms[0].SubstituteVars(a))	
+	return a
+}
+
+func writeln(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	fmt.Println(terms[0].SubstituteVars(a))	
+	return a
+}
+
 // TODO: parse listing/0 (or 0 arity 'compound' terms in general)
 func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	printMemory()	
-	return nil
+	return a
 }

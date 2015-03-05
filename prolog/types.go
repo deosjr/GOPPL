@@ -21,7 +21,7 @@ type Term interface {
 	UnifyWith(Term, Bindings) (bool, Bindings)
 	CreateVars(tempBindings) (Term, tempBindings)
 	compareTo(Term) bool
-	substituteVars(Bindings) Term
+	SubstituteVars(Bindings) Term
 }
 
 // TODO: separate int Atom

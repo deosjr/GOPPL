@@ -18,7 +18,7 @@ var unifytests = []struct {
 	{"[X], [1]", nil, map[string]string{"X":"1"}},
 	{"[X,Y], [1,2]", nil, map[string]string{"X":"1", "Y":"2"}},
 	{"p([0,1], [1]), p([0|A], A)", nil, map[string]string{"A":"[1]"}},
-	// TODO: change UpdateAlias or substituteVars or something else:
+	// TODO: change UpdateAlias:
 	// unifies but clashes: {B:[1], C:[]} and {B:[1|C]}
 	{"p(A, [1|C]), p([0|B], B)", map[string]string{"A":"[0,1]", "C":"[]"}, map[string]string{"B":"[1]"}},
 }

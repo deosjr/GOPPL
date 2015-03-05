@@ -231,25 +231,7 @@ func cleanUpVarsOutOfScope(to_clean Bindings, scope []*Var) Bindings {
 
 	clean := make(Bindings)
 	for _, v := range scope {	
-		temp := v
-		LOOP: 
-		for {
-			value, ok := to_clean[temp]
-			if !ok {
-				clean[v] = temp
-				break
-			}
-			switch value.(type) {
-			case *Var:
-				temp = value.(*Var)
-			case Atom:
-				clean[v] = value
-				break LOOP
-			case Compound:
-				clean[v] = value.(Compound).substituteVars(to_clean)
-				break LOOP
-			}
-		}
+		clean[v] = v.SubstituteVars(to_clean)
 	}
 	return clean
 }

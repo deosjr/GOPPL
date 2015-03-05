@@ -47,10 +47,6 @@ func (v *Var) UnifyWith(t Term, a Bindings) (unified bool, newalias Bindings) {
 	if bound, contains := a[v]; contains {
 		return bound.UnifyWith(t, a)
 	}
-	// TODO: anonymous vars are all the same atm. Give them an identifier?
-	if v.Name[0] == '_' {
-		return true, a
-	}
 	newalias = make(Bindings)
 	newalias[v] = t
 	return true, newalias
@@ -113,41 +109,41 @@ func UpdateAlias(aliases Bindings, updates Bindings) (clash bool) {
 	return false
 }
 
-func (a Atom) substituteVars(al Bindings) Term {
+func (a Atom) SubstituteVars(al Bindings) Term {
 	return a
 }
 
-func (v VarTemplate) substituteVars(a Bindings) Term {
+func (v VarTemplate) SubstituteVars(a Bindings) Term {
 	return v
 }
 
-func (v *Var) substituteVars(a Bindings) Term {
+func (v *Var) SubstituteVars(a Bindings) Term {
 	v1, ok := a[v]
 	if !ok {
 		return v
 	}
-	return v1.substituteVars(a)
+	return v1.SubstituteVars(a)
 }
 
-func (c Compound_Term) substituteVars(a Bindings) Term {
+func (c Compound_Term) SubstituteVars(a Bindings) Term {
 	
 	sub_args := Terms{}
 	for _,term := range c.GetArgs() {
-		sub := term.substituteVars(a)
+		sub := term.SubstituteVars(a)
 		sub_args = append(sub_args, sub)
 	}
 	return Compound_Term{c.GetPredicate(), sub_args}
 }
 
-func (n Nil) substituteVars(a Bindings) Term {
+func (n Nil) SubstituteVars(a Bindings) Term {
 	return n
 }
 
-func (c Cons) substituteVars(a Bindings) Term {
+func (c Cons) SubstituteVars(a Bindings) Term {
 	
 	sub_args := Terms{}
 	for _,term := range c.GetArgs() {
-		sub := term.substituteVars(a)
+		sub := term.SubstituteVars(a)
 		sub_args = append(sub_args, sub)
 	}
 	return Cons{Compound_Term{c.GetPredicate(), sub_args}, sub_args[0], sub_args[1]}
