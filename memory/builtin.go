@@ -79,6 +79,7 @@ func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 }
 
 // TODO: variables in terms[0] have to be bound
+// deadlocks on trying to negate a true premise?
 func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	if len(terms) != 1 {
 		return nil

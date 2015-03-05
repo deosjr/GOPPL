@@ -30,7 +30,7 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 		node.Notify()
 	}
 	if result, open := <- node.Answer; open && result.Err != prolog.Notification {
-		t.Errorf("Too many answers")
+		t.Errorf("Too many answers for query %s", query)
 	}
 }
 
@@ -68,6 +68,8 @@ func TestExample(t *testing.T) {
 		{"X": "1", "Y":"2"},
 	}
 	evaluateQuery(t, query, testAnswers)
+	//TODO: error too many answers, but testing by hand yields expected results
+	// Answer channel not properly closed? Why only for this query?
 	query = parseQuery("test(EEN).")
 	testAnswers = []map[string]string{
 		{"EEN": "1"},

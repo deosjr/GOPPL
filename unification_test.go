@@ -20,7 +20,7 @@ var unifytests = []struct {
 	{"p([0,1], [1]), p([0|A], A)", nil, map[string]string{"A":"[1]"}},
 	// TODO: change UpdateAlias:
 	// unifies but clashes: {B:[1], C:[]} and {B:[1|C]}
-	{"p(A, [1|C]), p([0|B], B)", map[string]string{"A":"[0,1]", "C":"[]"}, map[string]string{"B":"[1]"}},
+	{"p(A, [1|C]), p([0|B], B)", map[string]string{"A":"[0,1]", "C":"[]"}, map[string]string{"A":"[0,1]", "C":"[]", "B":"[1]"}},
 }
 
 func TestDoesUnify(t *testing.T) {

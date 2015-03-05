@@ -91,20 +91,36 @@ func (v VarTemplate) UnifyWith(t Term, alias Bindings) (bool, Bindings) {
 
 func UpdateAlias(aliases Bindings, updates Bindings) (clash bool) {
 
-	for k,v := range updates {
+	LOOP: for k, uv := range updates {
 		if av, ok := aliases[k]; ok {
 			switch av.(type) {
 			case *Var:
 				break
 			default:
-				// TODO: This is the only place compareTo is used. 
-				// Change to accept aliases and updates and compare/substitute?
-				if !v.compareTo(av) {
+				// context is (alias/k) union (updates/k)
+				// substituting both terms wrt the union of bindings
+				// should be possible.
+				context := make(Bindings)
+				for kk, vv := range aliases {
+					if k != kk {
+						context[kk] = vv
+					}
+				}
+				for kk, vv := range updates {
+					if k != kk {
+						context[kk] = vv
+					}
+				}
+				subav := av.SubstituteVars(context)
+				subuv := uv.SubstituteVars(context)
+				if !subuv.compareTo(subav) {
 					return true
 				}
+				aliases[k] = subav
+				continue LOOP
 			}
 		}
-		aliases[k] = v
+		aliases[k] = uv
 	}
 	return false
 }
