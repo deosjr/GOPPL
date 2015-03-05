@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"unicode"
 	
 	"GOPPL/prolog"
@@ -80,17 +81,17 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	// Check valid starting point
 	r1, _, err := r.r.ReadRune()
 	if err != nil {
-		return prolog.Predicate{}, prolog.Rule{}, err
+		return pred("",0), prolog.Rule{}, err
 	}	
 	// TODO: expand this simple check
 	if r1 == '[' {
-		return prolog.Predicate{}, prolog.Rule{}, r.ThrowError(ErrSyntaxError)
+		return pred("",0), prolog.Rule{}, r.ThrowError(ErrSyntaxError)
 	}
 	r.r.UnreadRune()
 
 	term, err := r.ReadTerm()
 	if err != nil {
-		return prolog.Predicate{}, prolog.Rule{}, err
+		return pred("",0), prolog.Rule{}, err
 	}
 	
 	if r.Last_Read == r.Stop {
@@ -105,23 +106,23 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 			rule := prolog.Rule{p.GetArgs(), prolog.Terms{}}
 			return predicate, rule, nil
 		default:
-			return prolog.Predicate{}, prolog.Rule{}, err
+			return pred("",0), prolog.Rule{}, err
 		}
 	}
 	p, _ := term.(prolog.Compound_Term)
 	
 	readfunction, err := r.readOperator()
 	if err != nil {
-		return prolog.Predicate{}, prolog.Rule{}, err
+		return pred("",0), prolog.Rule{}, err
 	}
 	terms, err := r.ReadTerms()
 	if err != nil {
-		return prolog.Predicate{}, prolog.Rule{}, err
+		return pred("",0), prolog.Rule{}, err
 	}
 	if r.Last_Read != r.Stop {
 		ok, err := r.findNext(r.Stop, true)
 		if !ok {
-			return prolog.Predicate{}, prolog.Rule{}, err
+			return pred("",0), prolog.Rule{}, err
 		}
 	}
 	return readfunction(p, terms)	
@@ -136,11 +137,69 @@ func (r *Reader) readRule(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pr
 	return predicate, rule, nil
 }
 
+func sVars(i *int) (prolog.VarTemplate, prolog.VarTemplate) {
+	namei := prolog.VarTemplate{"RESERVED" + strconv.Itoa(*i)}
+	*i++
+	namei1 := prolog.VarTemplate{"RESERVED" + strconv.Itoa(*i)}
+	return namei, namei1
+}
+
 func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Predicate, prolog.Rule, error) {
 	// TODO: parse DCG escape {}
-	// TODO: rewrite DCG to difference lists
-	predicate := p.GetPredicate()
-	rule := prolog.Rule{p.GetArgs(), terms}
+	predicate := pred(p.GetPredicate().Functor, p.GetPredicate().Arity + 2)
+	endvar := prolog.VarTemplate{"RESERVED"}
+	args := append(p.GetArgs(), prolog.VarTemplate{"RESERVED0"}, endvar)
+	dcgterms := prolog.Terms{}
+	i := 0
+	for index, t := range terms {
+		switch t.(type) {
+		case prolog.Atom:
+			// add atom(namei, namei+1)
+			namei, namei1 := sVars(&i)
+			if index == len(terms)-1 {
+				namei1 = endvar
+			}
+			pred := pred(t.(prolog.Atom).Value, 2)
+			dcgterms = append(dcgterms, prolog.Compound_Term{pred, prolog.Terms{namei, namei1}})
+		case prolog.Nil:
+			// add =(namei, namei+1)
+			namei, namei1 := sVars(&i)
+			if index == len(terms)-1 {
+				namei1 = endvar
+			}
+			dcgterms = append(dcgterms, prolog.Compound_Term{pred("UNIFY",2), prolog.Terms{namei, namei1}})
+		case prolog.List:
+			// add C(namei, x, namei+1); i++ for x in list
+			list := t
+			LOOP: for {
+				switch list.(type) {
+				case prolog.Cons:
+					x := list.(prolog.Cons).Head()
+					list = list.(prolog.Cons).Tail()
+					namei, namei1 := sVars(&i)
+					if _, ok := list.(prolog.Nil); index == len(terms)-1 && ok {
+						namei1 = endvar
+					}
+					dcgterms = append(dcgterms, prolog.Compound_Term{pred("C",3), prolog.Terms{namei, x, namei1}})
+				case prolog.Nil:
+					break LOOP
+				}
+			}
+		case prolog.Compound_Term:
+			// add namei, namei+1 to compound_term.args
+			namei, namei1 := sVars(&i)
+			if index == len(terms)-1 {
+				namei1 = endvar
+			}
+			ct := t.(prolog.Compound_Term)
+			pred := pred(ct.GetPredicate().Functor, ct.GetPredicate().Arity + 2)
+			pargs := append(ct.GetArgs(), namei, namei1)
+			dcgterms = append(dcgterms, prolog.Compound_Term{pred, pargs})
+		case *prolog.Var:
+			// ???
+		}
+	}
+	rule := prolog.Rule{args, dcgterms}
 	return predicate, rule, nil
 }
 

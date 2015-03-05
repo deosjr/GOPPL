@@ -56,6 +56,7 @@ var notunifytests = []struct {
 	{"a, b", nil},
 	{"[X], [1,2]", nil},
 	{"X, Y", map[string]string{"X":"a", "Y":"b"}},
+	{"[R0, R], [X, X]", map[string]string{"R0":"[1]", "R":"[]"}},
 }
 
 func TestDoesNotUnify(t *testing.T) {

@@ -4,8 +4,8 @@ package prolog
 // List Predicate = {"LIST", 2}
 type List interface {
 	Compound
-	head() Term
-	tail() Term
+	Head() Term
+	Tail() Term
 	isEmpty() bool
 }
 
@@ -21,19 +21,19 @@ type Nil struct {
 
 var Empty_List List = Nil{}
 
-func (c Cons) head() Term {
+func (c Cons) Head() Term {
 	return c.h
 }
 
-func (n Nil) head() Term {
+func (n Nil) Head() Term {
 	panic("Attempted to get head of []")
 }
 
-func (c Cons) tail() Term {
+func (c Cons) Tail() Term {
 	return c.t
 }
 
-func (n Nil) tail() Term {
+func (n Nil) Tail() Term {
 	panic("Attempted to get tail of []")
 }
 

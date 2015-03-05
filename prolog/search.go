@@ -2,6 +2,7 @@
 package prolog
 
 import "errors"
+//import "fmt"
 
 type Data map[Predicate][]Rule
 
@@ -130,8 +131,10 @@ func (node *searchnode) exploreRules(rules []Rule, term Compound_Term, terms Ter
 	for _, rule_template := range rules {
 		node.wait()
 		rule := callRule(rule_template)
+		//fmt.Println("CALL", rule)
 		new_alias, scope := prepareExplore(term, aliases)
 		unifies, al := unify(term.GetArgs(), rule.Head, new_alias)
+		//fmt.Println("UNIFIES", unifies, term.GetArgs(), rule.Head, new_alias, al)
 		if !unifies {
 			node.notifySelf()
 			continue
