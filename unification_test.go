@@ -1,6 +1,10 @@
 
 package main
 
+// TODO: parseQuery now makes /0 predicates out of atoms!
+// Need another way to represent unification tests easily
+
+/*
 import (
 	"testing"
 	
@@ -94,3 +98,4 @@ func findVarInTerms(vs string, vars []*prolog.Var) *prolog.Var {
 	}
 	panic("Error in unit test: variable " + vs + " not in terms!")
 }
+*/

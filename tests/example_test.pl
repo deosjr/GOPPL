@@ -21,6 +21,6 @@ test(EEN) :-
 	test1(p(Z1,X)), 
 	test2(p(Y,Z2)), 
 	=(X,2), =(Y,1), 
-	=(p(Z1,X), p(Y,Z2)),		% This clashes right now, but shouldnt!
+	=(p(Z1,X), p(Y,Z2)),
 	=(EEN, 1).
 

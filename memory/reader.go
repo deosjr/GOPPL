@@ -169,6 +169,7 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 	args := append(p.GetArgs(), prolog.VarTemplate{"RESERVED0"}, endvar)
 	dcgterms := prolog.Terms{}
 	i := 0
+	// TODO: refactor this ugly hack 'n slash
 	for index, t := range terms {
 		switch t.(type) {
 		case prolog.Atom:

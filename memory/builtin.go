@@ -3,6 +3,8 @@ package memory
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"GOPPL/prolog"
 )
@@ -16,7 +18,8 @@ func pred(functor string, arity int) prolog.Predicate {
 func InitBuiltIns() {
 
 	extralogical := prolog.Extralogical
-	extralogical[pred("listing", 0)] = listing
+	extralogical[pred("listing", 0)] = listingAll
+	extralogical[pred("listing", 1)] = listing
 
 	x := prolog.VarTemplate{"X"}
 	y := prolog.VarTemplate{"Y"}
@@ -52,9 +55,6 @@ func InitBuiltIns() {
 }
 
 func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	if len(terms) != 2 {
-		return nil
-	}
 	x, y := terms[0], terms[1]
 	xassign, err := prolog.Evaluate(y, a)
 	if err != nil {
@@ -88,9 +88,6 @@ func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 // TODO: variables in terms[0] have to be bound
 // deadlocks on trying to negate a true premise?
 func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	if len(terms) != 1 {
-		return nil
-	}
 	node := prolog.ContinueDFS(terms, a)
 	found_nothing := true
 	for result := range node.Answer {
@@ -123,8 +120,24 @@ func falseFunc(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	return nil
 }
 
-// TODO: parse listing/0 (or 0 arity 'compound' terms in general)
 func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	switch terms[0].(type) {
+	case prolog.Atom:
+		slash := terms[0].(prolog.Atom).Value()
+		if split := strings.Split(slash, "/"); len(split) == 2 {
+			i, err := strconv.Atoi(split[1])
+			if err != nil {
+				panic("Wrong argument for listing/1")
+			}
+			printTermInMemory(prolog.Predicate{split[0], i})	
+			return a
+		}
+	}
+	panic("Wrong argument for listing/1")
+	return nil	
+}
+
+func listingAll(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	printMemory()	
 	return a
 }

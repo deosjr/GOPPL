@@ -40,7 +40,7 @@ func InitFromFile(filename string) {
 			addData(pred, rule)
 		}
 	}
-	printMemory()
+	//printMemory()
 }
 
 /**
@@ -79,38 +79,43 @@ func varTemplates(terms prolog.Terms) []prolog.VarTemplate {
 
 func printMemory() {
 	RULES:
-	for k,v := range prolog.Memory {
+	for k,_ := range prolog.Memory {
 		for _,v := range builtins {
 			if k == v {
 				continue RULES
 			}
 		}
-		for _,rule := range v {
-			fmt.Printf("%s", k.Functor)
-			if k.Arity != 0 {
-				fmt.Print("(")
+		printTermInMemory(k)
+		fmt.Println()
+	}
+}
+
+func printTermInMemory(pred prolog.Predicate) {
+	v := prolog.Memory[pred]
+	for _,rule := range v {
+		fmt.Printf("%s", pred.Functor)
+		if pred.Arity != 0 {
+			fmt.Print("(")
+		}
+		for i,h := range rule.Head {
+			if i == pred.Arity-1 {
+				fmt.Printf("%s)", h.String())
+				break
 			}
-			for i,h := range rule.Head {
-				if i == k.Arity-1 {
-					fmt.Printf("%s)", h.String())
+			fmt.Printf("%s,",h.String())
+		}
+		if len(rule.Body) == 0 {
+			fmt.Println(".")
+		} else {
+			fmt.Println(" :-")
+			for i,b := range rule.Body {
+				if i == len(rule.Body)-1 {
+					fmt.Printf("\t%s.", b.String())
 					break
 				}
-				fmt.Printf("%s,",h.String())
+				fmt.Printf("\t%s,\n",b.String())
 			}
-			if len(rule.Body) == 0 {
-				fmt.Println(".")
-			} else {
-				fmt.Println(" :-")
-				for i,b := range rule.Body {
-					if i == len(rule.Body)-1 {
-						fmt.Printf("\t%s.", b.String())
-						break
-					}
-					fmt.Printf("\t%s,\n",b.String())
-				}
-				fmt.Println()
-			}
+			fmt.Println()
 		}
-		fmt.Println()
 	}
 }

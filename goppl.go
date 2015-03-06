@@ -53,8 +53,8 @@ func parseQuery(q string) prolog.Terms {
 	}
 	var_alias := make(map[prolog.VarTemplate]prolog.Term)
 	query := prolog.Terms{}
-	for _, t := range terms {
-		compound, err := reader.AtomToPredicate(t)
+	for i := len(terms)-1; i >= 0; i-- {
+		compound, err := reader.AtomToPredicate(terms[i])
 		if err != nil {
 			panic(err)
 		}

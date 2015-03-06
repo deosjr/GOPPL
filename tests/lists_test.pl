@@ -11,7 +11,6 @@ sumlist([], 0).
 sumlist([H|T], N) :- 
 	sumlist(T, N1), is(N, +(N1, H)).
 
-% How come X can still unify with EMPTYLIST?
 member(X, [X|_]) :- \=(X, []).
 member(X, [_|T]) :- 
 	member(X, T).

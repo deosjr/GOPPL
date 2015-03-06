@@ -22,22 +22,6 @@ func (c Compound_Term) String() string{
 	return s + ")"
 }
 
-func (tlist Terms) String() string {
-	s := "["
-	for _,t := range tlist {
-		s = s + t.String() + " "
-	}
-	return s + "]"
-} 
-
-func (a Bindings) String() string {
-	s := "{"
-	for k,v := range a {
-		s = s + k.String() + ":" + v.String() + " "
-	}
-	return s + "}"
-}
-
 func (c Cons) String() string { 
 	tail := c.Tail()
 	switch tail.(type){
@@ -55,4 +39,22 @@ func (c Cons) String() string {
 
 func (n Nil) String() string {
 	return "[]"
+}
+
+// For debugging only:
+
+func (tlist Terms) String() string {
+	s := "<"
+	for _,t := range tlist {
+		s = s + t.String() + " "
+	}
+	return s + ">"
+} 
+
+func (a Bindings) String() string {
+	s := "{"
+	for k,v := range a {
+		s = s + k.String() + ":" + v.String() + " "
+	}
+	return s + "}"
 }
