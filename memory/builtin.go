@@ -38,9 +38,6 @@ func InitBuiltIns() {
 	builtins[pred("\\=",2)] = notunify
 	addData(notunify, prolog.Rule{prolog.Terms{x, y}, prolog.Terms{prolog.Compound_Term{pred("not",1), prolog.Terms{prolog.Compound_Term{unify, prolog.Terms{x, y}}}}}})
 
-	//	is/2 as IS
-	extralogical[pred("is",2)] = is 
-
 	// write and writeln
 	extralogical[pred("write",1)] = write
 	extralogical[pred("writeln",1)] = writeln
@@ -52,37 +49,15 @@ func InitBuiltIns() {
 	// true and false
 	extralogical[pred("true",0)] = trueFunc
 	extralogical[pred("false",0)] = falseFunc
-}
 
-func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	x, y := terms[0], terms[1]
-	xassign, err := prolog.Evaluate(y, a)
-	if err != nil {
-		// y was insufficiently instantiated
-		panic(err)
-		return nil
-	}
-	xvalue, err := prolog.Evaluate(x, a)
-	switch err {
-	case prolog.InstantiationError:
-		v, ok := x.(*prolog.Var)
-		if !ok {
-			panic(err)
-			return nil
-		}
-		update := make(prolog.Bindings)
-		update[v] = prolog.GetInt(xassign)
-		clash := prolog.UpdateAlias(a, update)
-		if clash {
-			return nil
-		}
-		return a
-	case nil: // x is an expression with no vars
-		if xvalue == xassign {
-			return a
-		}
-	}
-	return nil
+	// arithmetics
+	extralogical[pred("is",2)] = is 
+	extralogical[pred("=:=",2)] = arithmetic_equals 
+	extralogical[pred("=\\=",2)] = arithmetic_not_equals 
+	extralogical[pred("<",2)] = arithmetic_less 
+	extralogical[pred("=<",2)] = arithmetic_leq 
+	extralogical[pred(">",2)] = arithmetic_greater 
+	extralogical[pred(">=",2)] = arithmetic_geq 
 }
 
 // TODO: variables in terms[0] have to be bound
@@ -123,13 +98,13 @@ func falseFunc(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	switch terms[0].(type) {
 	case prolog.Atom:
-		slash := terms[0].(prolog.Atom).Value()
-		if split := strings.Split(slash, "/"); len(split) == 2 {
+		input := terms[0].(prolog.Atom).Value()
+		if split := strings.Split(input, "/"); len(split) == 2 {
 			i, err := strconv.Atoi(split[1])
 			if err != nil {
 				panic("Wrong argument for listing/1")
 			}
-			printTermInMemory(prolog.Predicate{split[0], i})	
+			printTermInMemory(prolog.Predicate{split[0], i})
 			return a
 		}
 	}

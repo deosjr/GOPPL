@@ -107,12 +107,26 @@ func TestLists(t *testing.T) {
 	evaluateQuery(t, query, testAnswers)
 }
 
-/** TODO: evaluateQueryTrue
+// TODO: evaluateQueryTrue
 func TestDifferenceLists(t *testing.T) {
 	memory.InitFromFile("tests/difference_lists_test.pl")
 	memory.InitBuiltIns()
-	evaluateQueryTrue(t, parseQuery("pal([0],[])."))
-	evaluateQueryTrue(t, parseQuery("pal([1,0,1],[])."))
-	evaluateQueryTrue(t, parseQuery("pal([1,1,1,1,1],[])."))
+	//evaluateQueryTrue(t, parseQuery("pal([0],[])."))
+	//evaluateQueryTrue(t, parseQuery("pal([1,0,1],[])."))
+	//evaluateQueryTrue(t, parseQuery("pal([1,1,1,1,1],[])."))
+	query := parseQuery("pal(S, [1,0,1,0,1], []).")
+	testAnswers :=  []map[string]string{
+		{"S":"s(s(0))"},
+	}
+	evaluateQuery(t, query, testAnswers)
 }
-*/
+
+func TestArithmetic(t *testing.T) {
+	memory.InitFromFile("tests/arithmetic_test.pl")
+	memory.InitBuiltIns()
+	query := parseQuery("split([a,b,c,d,e,f,g,h,i,j],3,L1,L2).")
+	testAnswers :=  []map[string]string{
+		{"L1":"[a,b,c]", "L2":"[d,e,f,g,h,i,j]"},
+	}
+	evaluateQuery(t, query, testAnswers)
+}

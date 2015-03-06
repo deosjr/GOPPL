@@ -393,9 +393,10 @@ func (r *Reader) readRune() (rune, error) {
 	return r1, err
 }
 
-// TODO: '=+-*/\\' added for simplicity for now, need extended check
+// TODO: '=+-*/\\<>:' added for simplicity for now, need extended check
+// All to allow = and < and such as builtin predicates!
 func checkValidAtomVar(r rune) bool {
-	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '=' || r == '+' || r == '-' || r == '*' || r == '/' || r == '\\'
+	return unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '=' || r == '+' || r == '-' || r == '*' || r == '/' || r == '\\' || r == '<' || r == '>' || r == ':'
 }
 
 func checkValidFunctor(s []rune) bool {

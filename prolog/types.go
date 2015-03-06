@@ -93,6 +93,14 @@ func (a Atom) equals(t Term) bool {
 	return false
 }
 
+func (i Int) equals(t Term) bool {
+	switch t.(type) {
+	case Atomic:
+		return i == t
+	}
+	return false
+}
+
 func (v *Var) equals(t Term) bool {
 	switch t.(type) {
 	case *Var:

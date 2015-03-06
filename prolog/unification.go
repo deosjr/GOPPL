@@ -1,10 +1,6 @@
 
 package prolog
 
-import (
-	"errors"
-)
-
 func unify(args1 []Term, args2 []Term, aliases Bindings) (unified bool, newalias Bindings) {
 
 	newalias = make(Bindings)
@@ -37,6 +33,18 @@ func (a Atom) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings
 		}
 	case *Var:
 		return t.UnifyWith(a, alias)
+	}
+	return false, nil
+}
+
+func (i Int) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
+	switch t.(type){
+	case Atomic:
+		if i.Value() == t.(Atomic).Value() {
+			return true, newalias
+		}
+	case *Var:
+		return t.UnifyWith(i, alias)
 	}
 	return false, nil
 }
@@ -128,6 +136,10 @@ func (a Atom) SubstituteVars(al Bindings) Term {
 	return a
 }
 
+func (i Int) SubstituteVars(al Bindings) Term {
+	return i
+}
+
 func (v VarTemplate) SubstituteVars(a Bindings) Term {
 	return v
 }
@@ -162,43 +174,4 @@ func (c Cons) SubstituteVars(a Bindings) Term {
 		sub_args = append(sub_args, sub)
 	}
 	return Cons{Compound_Term{c.GetPredicate(), sub_args}, sub_args[0], sub_args[1]}
-}
-
-var InstantiationError error = errors.New("arguments insufficiently instantiated")
-
-func Evaluate(t Term, a Bindings) (int, error) {
-	switch t.(type) {
-	case Int:
-		return t.(Int).IntValue(), nil
-	case *Var:
-		value, ok := a[t.(*Var)]
-		if ok {
-			return Evaluate(value, a)
-		} 
-		return 0, InstantiationError
-	case Compound_Term:
-		ct := t.(Compound_Term)
-		if ct.Pred.Arity != 2 {
-			return 0, nil
-		}
-		v1, err1 := Evaluate(ct.Args[0], a)
-		v2, err2 := Evaluate(ct.Args[1], a)
-		if err1 != nil {
-			return 0, err1
-		}
-		if err2 != nil {
-			return 0, err2
-		}
-		switch ct.Pred.Functor {
-		case "+":
-			return v1 + v2, nil
-		case "-":
-			return v1 - v2, nil
-		case "*":
-			return v1 * v2, nil
-		case "/":
-			return v1 / v2, nil
-		}
-	}
-	return 0, nil
 }

@@ -78,8 +78,10 @@ func (node *searchnode) dfs(aliases Bindings) {
 	}
 	terms, t := node.stack[:len(node.stack)-1], node.stack[len(node.stack)-1]
 	
-	//Compound_Term assumption (TODO: check at parse?):
-	term := t.(Compound_Term)
+	term, ok := t.(Compound_Term)
+	if !ok {
+		panic("expected a compound term in query!")
+	}
 	rules, contains := Memory[term.Pred]
 	if !contains {
 		if f, ok := Extralogical[term.Pred]; ok {

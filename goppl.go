@@ -14,7 +14,7 @@ import (
 )
 
 // TODO: multi-term queries: int(X), int(Y).
-// 		 Right now only Y is in scope in answer
+// 		 Right now only X is in scope in answer
 
 func main() {
 
