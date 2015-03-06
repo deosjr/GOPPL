@@ -75,6 +75,18 @@ func (r *Reader) ReadAll() (prolog.Data, error) {
 	}
 }
 
+func (r *Reader) AtomToPredicate(term prolog.Term) (prolog.Compound_Term, error) {
+	switch term.(type){
+	case prolog.Atom:
+		predicate := prolog.Predicate{term.(prolog.Atom).Value(), 0}
+		return prolog.Compound_Term{predicate, prolog.Terms{}}, nil
+	case prolog.Compound_Term:
+		return term.(prolog.Compound_Term), nil
+	default:
+		return prolog.Compound_Term{}, r.ThrowError(ErrSyntaxError)
+	}
+}
+
 // Read returns the next full rule in a prolog file
 func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 
@@ -93,23 +105,21 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	if err != nil {
 		return pred("",0), prolog.Rule{}, err
 	}
-	
-	if r.Last_Read == r.Stop {
-		switch term.(type){
-		case prolog.Atom:
-			predicate := prolog.Predicate{term.(prolog.Atom).Value(), 0}
-			rule := prolog.Rule{prolog.Terms{}, prolog.Terms{}}
-			return predicate, rule, nil
-		case prolog.Compound_Term:
-			p := term.(prolog.Compound_Term)
-			predicate := p.GetPredicate()
-			rule := prolog.Rule{p.GetArgs(), prolog.Terms{}}
-			return predicate, rule, nil
-		default:
-			return pred("",0), prolog.Rule{}, err
+	switch term.(type){
+	case prolog.Atom:
+		if r.Last_Read != '.' {
+			r.r.UnreadRune()
 		}
 	}
-	p, _ := term.(prolog.Compound_Term)
+
+	p, err := r.AtomToPredicate(term)
+	if err != nil {
+		return pred("",0), prolog.Rule{}, err
+	}
+	
+	if r.Last_Read == r.Stop {
+		return p.GetPredicate(), prolog.Rule{p.GetArgs(), prolog.Terms{}}, nil
+	}
 	
 	readfunction, err := r.readOperator()
 	if err != nil {
@@ -133,7 +143,15 @@ type readfunc func(prolog.Compound_Term, prolog.Terms)(prolog.Predicate, prolog.
 func (r *Reader) readRule(p prolog.Compound_Term, terms prolog.Terms) (prolog.Predicate, prolog.Rule, error) {
 	// TODO: syntax error on DCG escape {}
 	predicate := p.GetPredicate()
-	rule := prolog.Rule{p.GetArgs(), terms}
+	no_atom_terms := prolog.Terms{}
+	for _, t := range terms {
+		compound, err := r.AtomToPredicate(t)
+		if err != nil {
+			return pred("",0), prolog.Rule{}, err
+		}
+		no_atom_terms = append(no_atom_terms, compound)
+	}
+	rule := prolog.Rule{p.GetArgs(), no_atom_terms}
 	return predicate, rule, nil
 }
 

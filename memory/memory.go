@@ -40,7 +40,7 @@ func InitFromFile(filename string) {
 			addData(pred, rule)
 		}
 	}
-	//printMemory()
+	printMemory()
 }
 
 /**
@@ -86,7 +86,10 @@ func printMemory() {
 			}
 		}
 		for _,rule := range v {
-			fmt.Printf("%s(", k.Functor)
+			fmt.Printf("%s", k.Functor)
+			if k.Arity != 0 {
+				fmt.Print("(")
+			}
 			for i,h := range rule.Head {
 				if i == k.Arity-1 {
 					fmt.Printf("%s)", h.String())

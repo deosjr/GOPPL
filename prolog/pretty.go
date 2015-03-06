@@ -8,6 +8,9 @@ func (v *Var) String() string { return v.Name }
 func (v VarTemplate) String() string { return v.Name }
 
 func (c Compound_Term) String() string{ 
+	if c.Pred.Arity == 0 {
+		return c.Pred.Functor
+	}
 	s := c.Pred.Functor + "("
 	for i,t := range c.Args {
 		if i == c.Pred.Arity-1 {

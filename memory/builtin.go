@@ -45,6 +45,10 @@ func InitBuiltIns() {
 	// DCG builtin predicate (TODO: might want to just rewrite better?)
 	builtins[pred("C",3)] = pred("C",3)
 	addData(pred("C",3), prolog.Rule{prolog.Terms{prolog.CreateList(prolog.Terms{x},y),x,y}, prolog.Terms{}})
+
+	// true and false
+	extralogical[pred("true",0)] = trueFunc
+	extralogical[pred("false",0)] = falseFunc
 }
 
 func is(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
@@ -109,6 +113,14 @@ func write(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 func writeln(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	fmt.Println(terms[0].SubstituteVars(a))	
 	return a
+}
+
+func trueFunc(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	return a
+}
+
+func falseFunc(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
+	return nil
 }
 
 // TODO: parse listing/0 (or 0 arity 'compound' terms in general)

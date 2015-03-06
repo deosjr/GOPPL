@@ -22,7 +22,7 @@ type Term interface {
 	String() string
 	UnifyWith(Term, Bindings) (bool, Bindings)
 	CreateVars(tempBindings) (Term, tempBindings)
-	compareTo(Term) bool
+	equals(Term) bool
 	SubstituteVars(Bindings) Term
 }
 
@@ -73,7 +73,6 @@ type Compound interface {
 	GetArgs() Terms
 }
 
-// TODO: distinction between ground and unground compound terms
 type Compound_Term struct {
 	Pred Predicate
 	Args Terms
@@ -86,7 +85,7 @@ func (c Compound_Term) GetArgs() Terms {
 	return c.Args
 }
 
-func (a Atom) compareTo(t Term) bool {
+func (a Atom) equals(t Term) bool {
 	switch t.(type) {
 	case Atomic:
 		return a == t
@@ -94,7 +93,7 @@ func (a Atom) compareTo(t Term) bool {
 	return false
 }
 
-func (v *Var) compareTo(t Term) bool {
+func (v *Var) equals(t Term) bool {
 	switch t.(type) {
 	case *Var:
 		return v == t
@@ -102,14 +101,14 @@ func (v *Var) compareTo(t Term) bool {
 	return false
 }
 
-func (c Compound_Term) compareTo(t Term) bool {
+func (c Compound_Term) equals(t Term) bool {
 	switch t.(type) {
 	case Compound:
 		tc := t.(Compound)
 		if c.GetPredicate() == tc.GetPredicate() {
 			cargs, tcargs := c.GetArgs(), tc.GetArgs()
 			for i:=0; i < len(cargs); i++ {
-				if !cargs[i].compareTo(tcargs[i]) {
+				if !cargs[i].equals(tcargs[i]) {
 					return false
 				}
 			}
@@ -119,7 +118,7 @@ func (c Compound_Term) compareTo(t Term) bool {
 	return false
 }
 
-func (v VarTemplate) compareTo(t Term) bool {
+func (v VarTemplate) equals(t Term) bool {
 	switch t.(type) {
 	case VarTemplate:
 		return v.Name == t.(VarTemplate).Name

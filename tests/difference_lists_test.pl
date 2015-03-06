@@ -1,14 +1,16 @@
 % see http://homepage.cs.uiowa.edu/~fleck/dcgTrans.htm
 
-pal(X, Steps) :- pal(Steps, X, []).
-
 pal(0) --> [].
 pal(0) --> [0].
 pal(0) --> [1].
 pal(s(X)) --> [0], pal(X), [0].
 pal(s(X)) --> [1], pal(X), [1].
 
-% pal --> [] doesnt parse because zero args compounds arent parsed yet!
+pal --> [].
+pal --> [0].
+pal --> [1].
+pal --> [0], pal, [0].
+pal --> [1], pal, [1].
 
 %pal(A, A).
 %pal([0|A], A).

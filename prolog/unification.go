@@ -112,7 +112,7 @@ func UpdateAlias(aliases Bindings, updates Bindings) (clash bool) {
 				}
 				subav := av.SubstituteVars(context)
 				subuv := uv.SubstituteVars(context)
-				if !subuv.compareTo(subav) {
+				if !subuv.equals(subav) {
 					return true
 				}
 				aliases[k] = subav
