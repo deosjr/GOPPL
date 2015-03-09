@@ -75,13 +75,13 @@ func (r *Reader) ReadAll() (prolog.Data, error) {
 	}
 }
 
-func (r *Reader) AtomToPredicate(term prolog.Term) (prolog.Compound_Term, error) {
-	switch term.(type){
+func (r *Reader) AtomToPredicate(t prolog.Term) (prolog.Compound_Term, error) {
+	switch term := t.(type){
 	case prolog.Atom:
-		predicate := prolog.Predicate{term.(prolog.Atom).Value(), 0}
+		predicate := prolog.Predicate{term.Value(), 0}
 		return prolog.Compound_Term{predicate, prolog.Terms{}}, nil
 	case prolog.Compound_Term:
-		return term.(prolog.Compound_Term), nil
+		return term, nil
 	default:
 		return prolog.Compound_Term{}, r.ThrowError(ErrSyntaxError)
 	}
@@ -171,14 +171,14 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 	i := 0
 	// TODO: refactor this ugly hack 'n slash
 	for index, t := range terms {
-		switch t.(type) {
+		switch term := t.(type) {
 		case prolog.Atom:
 			// add atom(namei, namei+1)
 			namei, namei1 := sVars(&i)
 			if index == len(terms)-1 {
 				namei1 = endvar
 			}
-			pred := pred(t.(prolog.Atom).Value(), 2)
+			pred := pred(term.Value(), 2)
 			dcgterms = append(dcgterms, prolog.Compound_Term{pred, prolog.Terms{namei, namei1}})
 		case prolog.Nil:
 			// add =(namei, namei+1)
@@ -191,10 +191,10 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 			// add C(namei, x, namei+1); i++ for x in list
 			list := t
 			LOOP: for {
-				switch list.(type) {
+				switch lv := list.(type) {
 				case prolog.Cons:
-					x := list.(prolog.Cons).Head()
-					list = list.(prolog.Cons).Tail()
+					x := lv.Head()
+					list = lv.Tail()
 					namei, namei1 := sVars(&i)
 					if _, ok := list.(prolog.Nil); index == len(terms)-1 && ok {
 						namei1 = endvar
@@ -210,9 +210,8 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 			if index == len(terms)-1 {
 				namei1 = endvar
 			}
-			ct := t.(prolog.Compound_Term)
-			pred := pred(ct.GetPredicate().Functor, ct.GetPredicate().Arity + 2)
-			pargs := append(ct.GetArgs(), namei, namei1)
+			pred := pred(term.GetPredicate().Functor, term.GetPredicate().Arity + 2)
+			pargs := append(term.GetArgs(), namei, namei1)
 			dcgterms = append(dcgterms, prolog.Compound_Term{pred, pargs})
 		case prolog.VarTemplate:
 			// TODO: syntax error right ???

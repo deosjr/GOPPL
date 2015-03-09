@@ -110,11 +110,10 @@ func (v *Var) equals(t Term) bool {
 }
 
 func (c Compound_Term) equals(t Term) bool {
-	switch t.(type) {
+	switch term := t.(type) {
 	case Compound:
-		tc := t.(Compound)
-		if c.GetPredicate() == tc.GetPredicate() {
-			cargs, tcargs := c.GetArgs(), tc.GetArgs()
+		if c.GetPredicate() == term.GetPredicate() {
+			cargs, tcargs := c.GetArgs(), term.GetArgs()
 			for i:=0; i < len(cargs); i++ {
 				if !cargs[i].equals(tcargs[i]) {
 					return false
@@ -127,9 +126,9 @@ func (c Compound_Term) equals(t Term) bool {
 }
 
 func (v VarTemplate) equals(t Term) bool {
-	switch t.(type) {
+	switch term := t.(type) {
 	case VarTemplate:
-		return v.Name == t.(VarTemplate).Name
+		return v.Name == term.Name
 	}
 	return false
 }

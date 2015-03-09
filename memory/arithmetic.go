@@ -7,7 +7,10 @@ import (
 	"GOPPL/prolog"
 )
 
-var instantiationError error = errors.New("arguments insufficiently instantiated")
+var (
+	instantiationError = errors.New("arguments insufficiently instantiated")
+	zeroDivisionError = errors.New("division by zero")
+)
 
 func evaluate(t prolog.Term, a prolog.Bindings) (int, error) {
 	switch t.(type) {
@@ -40,6 +43,10 @@ func evaluate(t prolog.Term, a prolog.Bindings) (int, error) {
 		case "*":
 			return v1 * v2, nil
 		case "/":
+			if v2 == 0 {
+				return 0, zeroDivisionError
+			}
+			// TODO: using ints makes this very imprecise!
 			return v1 / v2, nil
 		}
 	}

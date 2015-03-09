@@ -247,14 +247,14 @@ func cleanUpVarsOutOfScope(to_clean Bindings, scope []*Var) Bindings {
 
 func VarsInTermArgs(terms Terms) []*Var {
 	vars := []*Var{}
-	for _, term := range terms {
-		switch term.(type) {
+	for _, t := range terms {
+		switch term := t.(type) {
 		case *Var:
-			vars = append(vars, term.(*Var))
+			vars = append(vars, term)
 		case Cons:
-			vars = append(vars, VarsInTermArgs(term.(Cons).GetArgs())...)
+			vars = append(vars, VarsInTermArgs(term.GetArgs())...)
 		case Compound_Term:
-			vars = append(vars, VarsInTermArgs(term.(Compound_Term).GetArgs())...)
+			vars = append(vars, VarsInTermArgs(term.GetArgs())...)
 		}
 	}
 	return vars

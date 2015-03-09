@@ -26,9 +26,9 @@ func unify(args1 []Term, args2 []Term, aliases Bindings) (unified bool, newalias
 }
 
 func (a Atom) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
-	switch t.(type){
+	switch term := t.(type){
 	case Atomic:
-		if a.Value() == t.(Atomic).Value() {
+		if a.Value() == term.Value() {
 			return true, newalias
 		}
 	case *Var:
@@ -38,9 +38,9 @@ func (a Atom) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings
 }
 
 func (i Int) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
-	switch t.(type){
+	switch term := t.(type){
 	case Atomic:
-		if i.Value() == t.(Atomic).Value() {
+		if i.Value() == term.Value() {
 			return true, newalias
 		}
 	case *Var:
@@ -60,11 +60,10 @@ func (v *Var) UnifyWith(t Term, a Bindings) (unified bool, newalias Bindings) {
 }
 
 func (c Compound_Term) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
-	switch t.(type){
+	switch term := t.(type){
 	case Compound_Term:
-		ct := t.(Compound_Term)
-		if c.GetPredicate() == ct.GetPredicate() {
-			return unify(c.GetArgs(), ct.GetArgs(), alias)
+		if c.GetPredicate() == term.GetPredicate() {
+			return unify(c.GetArgs(), term.GetArgs(), alias)
 		}
 	case *Var:
 		return t.UnifyWith(c, alias)
@@ -73,9 +72,9 @@ func (c Compound_Term) UnifyWith(t Term, alias Bindings) (unified bool, newalias
 }
 
 func (c Cons) UnifyWith(t Term, alias Bindings) (unified bool, newalias Bindings) {
-	switch t.(type){
+	switch term := t.(type){
 	case Cons:
-		return unify(c.GetArgs(), t.(List).GetArgs(), alias)
+		return unify(c.GetArgs(), term.GetArgs(), alias)
 	case *Var:
 		return t.UnifyWith(c, alias)
 	}

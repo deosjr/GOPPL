@@ -49,6 +49,7 @@ func InitBuiltIns() {
 	// true and false
 	extralogical[pred("true",0)] = trueFunc
 	extralogical[pred("false",0)] = falseFunc
+	extralogical[pred("fail",0)] = falseFunc
 
 	// arithmetics
 	extralogical[pred("is",2)] = is 
