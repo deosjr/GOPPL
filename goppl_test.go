@@ -10,13 +10,13 @@ import (
 // TODO: evaluate nonterminating queries, by comparing the first X results from answer
 
 func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
-	node :=  prolog.StartDFS(query)
+	node := prolog.EmptyDFS(query)
 	for _, bindings := range testAnswers {
-		result, open := <- node.Answer
-		if !open {
+		alias := node.GetAnswer()
+		if alias == nil {
 			t.Errorf("Not enough answers")
 		}
-		for k, v := range result.Alias {
+		for k, v := range alias {
 			if _, contains := bindings[k.String()]; !contains {
 				t.Errorf("Out of scope variable %s in alias", k.String())
 			} else if v.String() != bindings[k.String()] {
@@ -27,9 +27,9 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 		if len(bindings) > 0 {
 			t.Errorf("Unbound input variables: %v", bindings)
 		}
-		node.Notify()
 	}
-	if result, open := <- node.Answer; open && result.Err != prolog.Notification {
+	alias := node.GetAnswer()
+	if alias != nil {
 		t.Errorf("Too many answers for query %s", query)
 	}
 }

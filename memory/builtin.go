@@ -64,15 +64,8 @@ func InitBuiltIns() {
 // TODO: variables in terms[0] have to be bound
 // deadlocks on trying to negate a true premise?
 func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	node := prolog.ContinueDFS(terms, a)
-	found_nothing := true
-	for result := range node.Answer {
-		if result.Err == prolog.Notification {
-			break
-		}
-		found_nothing = false
-	}
-	if found_nothing {
+	node := prolog.BoundDFS(terms, a)
+	if node.GetAnswer() == nil {
 		return a
 	}
 	return nil

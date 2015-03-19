@@ -78,16 +78,13 @@ func REPL() {
 		input := s.Text()
 		
 		query := parseQuery(input)
-		node := prolog.StartDFS(query)
+		node := prolog.EmptyDFS(query)
 		
 		wait := true
 		s.Split(bufio.ScanRunes)
+		alias := node.GetAnswer()
 		ANSWERS:
-		for result := range node.Answer {
-			alias := result.Alias
-			if result.Err == prolog.Notification {
-				break
-			}
+		for alias != nil {
 			if len(alias) == 0 {
 				fmt.Print("True.")
 			} else {
@@ -110,10 +107,10 @@ func REPL() {
 					}
 				}
 			}
-			node.Notify()
 			if !wait {
 				fmt.Println()
 			}
+			alias = node.GetAnswer()
 		}
 		fmt.Println("False.")
 	

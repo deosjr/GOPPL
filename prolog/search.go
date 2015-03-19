@@ -1,7 +1,6 @@
 
 package prolog
 
-import "errors"
 //import "fmt"
 
 type Data map[Predicate][]Rule
@@ -9,139 +8,141 @@ type Data map[Predicate][]Rule
 var Memory Data = make(Data)
 var Extralogical = make( map[Predicate] func(Terms, Bindings) Bindings )
 
-var Notification error = errors.New("notify")
-
 type searchnode struct {
-	Answer chan result
-	notify chan bool
 	children []*searchnode
-	// newest item in stack at end: stack[len-1] (->)
-	stack Terms
+	term Compound_Term
+	stack Terms 			// newest item in stack at end: stack[len-1] (->)
+	answers []Bindings
+	alias Bindings
+	scope []*Var
+	rules []Rule
+	f func(Terms, Bindings) Bindings
+	start bool
 }
 
-func (node *searchnode) wait() {
-	<- node.notify
-}
-
-func (node *searchnode) Notify() {
-	if len(node.children) > 0 {
-		node.children[0].Notify()
-	} else {
-		node.notify <- true
+// returns nil if nothing remains to be explored
+func newNode(terms Terms, alias Bindings) *searchnode {
+	//fmt.Println("NODE: ", terms)
+	if len(terms) == 0 {
+		return nil
 	}
-}
-
-func (node *searchnode) notifySelf() {
-	node.notify <- true
-}
-
-func (node *searchnode) closeAll(pass_on bool) {
-	for _, c := range node.children {
-		close(c.notify)
-	}
-	if pass_on && len(node.notify) > 0 {
-		<- node.notify
-		node.Answer <- result{nil, Notification}
-	}
-	close(node.Answer)
-}
-
-func newNode(terms Terms) *searchnode {
-	answer := make(chan result, 1)
-	notify := make(chan bool, 1)
-	return &searchnode{answer, notify, []*searchnode{}, terms}
-}
-
-type result struct {
-	Alias Bindings
-	Err error
-}
-
-func StartDFS(query Terms) *searchnode {
-	no_alias := make(Bindings)
-	return ContinueDFS(query, no_alias)
-}
-
-func ContinueDFS(query Terms, alias Bindings) *searchnode {
-	startnode := newNode(query)
-	go startnode.dfs(alias)
-	startnode.Notify()
-	return startnode
-}
-
-func (node *searchnode) dfs(aliases Bindings) {
-	
-	if len(node.stack) == 0 {
-		node.Answer <- result{aliases, nil}
-		node.closeAll(false)
-		return
-	}
-	terms, t := node.stack[:len(node.stack)-1], node.stack[len(node.stack)-1]
-	
-	term, ok := t.(Compound_Term)
-	if !ok {
-		panic("expected a compound term in query!")
-	}
-	rules, contains := Memory[term.Pred]
-	if !contains {
-		if f, ok := Extralogical[term.Pred]; ok {
-			node.exploreFunction(f, term, terms, aliases)
-		} else {
-			node.closeAll(false)
-			return
-		}
-	} else {
-		node.exploreRules(rules, term, terms, aliases)
-	}
-	node.closeAll(true)
-}
-
-func prepareExplore(term Compound_Term, aliases Bindings) (Bindings, []*Var) {
-	new_alias := make(Bindings)
+	term := terms[len(terms)-1].(Compound_Term)
 	scope := []*Var{}
-	for k,v := range aliases {
-		new_alias[k] = v
+	for k,_ := range alias {
 		scope = append(scope, k)
 	}
 	scope = append(scope, VarsInTermArgs(term.GetArgs())...)
-	return new_alias, scope
+	return &searchnode{[]*searchnode{}, term, terms, []Bindings{}, alias, scope, []Rule{}, nil, true}
 }
 
-func (node *searchnode) exploreFurther(new_alias Bindings, al Bindings, scope []*Var, newterms Terms) {
-	clash := UpdateAlias(new_alias, al)
-	if clash { 
-		node.notifySelf()
-		return
+func EmptyDFS(query Terms) *searchnode {
+	no_alias := make(Bindings)
+	return BoundDFS(query, no_alias)
+}
+
+func BoundDFS(query Terms, alias Bindings) *searchnode {
+	startnode := newNode(query, alias)
+	return startnode
+}
+
+func (node *searchnode) GetAnswer() Bindings {
+	if node.start {
+		return node.startDFS()
 	}
-	newnode := newNode(newterms)
-	node.children = append(node.children, newnode)
-	go newnode.dfs(new_alias)
-	node.awaitAnswers(newnode, scope)
+	return node.continueDFS()
 }
 
-func (node *searchnode) exploreFunction(f func(Terms, Bindings) Bindings, term Compound_Term, terms Terms, aliases Bindings) {
-	node.wait()
-	new_alias, scope := prepareExplore(term, aliases)
-	al := f(term.Args, aliases)
-	if al == nil {
-		return
-	}
-	node.exploreFurther(new_alias, al, scope, terms)
+func (node *searchnode) getTerms() Terms {
+	return node.stack[:len(node.stack)-1]
 }
 
-func (node *searchnode) exploreRules(rules []Rule, term Compound_Term, terms Terms, aliases Bindings) {
-	for _, rule_template := range rules {
-		node.wait()
-		rule := callRule(rule_template)
-		//fmt.Println("CALL", rule)
-		new_alias, scope := prepareExplore(term, aliases)
-		unifies, al := unify(term.GetArgs(), rule.Head, new_alias)
-		//fmt.Println("UNIFIES", unifies, term.GetArgs(), rule.Head, new_alias, al)
-		if !unifies {
-			node.notifySelf()
-			continue
+func (node *searchnode) startDFS() Bindings {
+	node.start = false
+	rules, contains := Memory[node.term.Pred]
+	if !contains {
+		if f, ok := Extralogical[node.term.Pred]; ok {
+			node.f = f
+		} else {
+			return nil
 		}
-		node.exploreFurther(new_alias, al, scope, appendNewTerms(terms, rule.Body))
+	}
+	node.rules = rules
+	return node.continueDFS()
+}
+
+func (node *searchnode) continueDFS() Bindings {
+	for len(node.children) != 0 {
+		answer := node.getAnswerFromChild(node.children[0])
+		if answer != nil {
+			return answer
+		}
+	}
+	if node.f != nil {
+		return node.exploreFunction()
+	}
+	for len(node.rules) != 0 {
+		answer := node.exploreRules()
+		if answer != nil {
+			return answer
+		}
+	}
+	return nil
+}
+
+func (node *searchnode) exploreFunction() Bindings {
+	new_alias := node.prepareExplore()
+	alias := node.f(node.term.Args, node.alias)
+	if alias == nil {
+		return nil
+	}
+	return node.exploreFurther(new_alias, alias, node.getTerms())
+}
+
+func (node *searchnode) exploreRules() Bindings {
+	if len(node.rules) == 0 {
+		return nil
+	}
+	rule_template := node.rules[0]
+	node.rules = node.rules[1:]
+	rule := callRule(rule_template)
+	//fmt.Println("CALL", node.term, rule)
+	new_alias := node.prepareExplore()
+	unifies, alias := unify(node.term.GetArgs(), rule.Head, new_alias)
+	//fmt.Println("UNIFIES", unifies, term.GetArgs(), rule.Head, new_alias, al)
+	if !unifies {
+		return nil
+	}
+	return node.exploreFurther(new_alias, alias, appendNewTerms(node.getTerms(), rule.Body))
+}
+
+func (node *searchnode) prepareExplore() Bindings {
+	new_alias := make(Bindings)
+	for k,v := range node.alias {
+		new_alias[k] = v
+	}
+	return new_alias
+}
+
+func (node *searchnode) exploreFurther(new_alias Bindings, alias Bindings, newterms Terms) Bindings {
+	clash := UpdateAlias(new_alias, alias)
+	if clash { 
+		return nil
+	}
+	newnode := newNode(newterms, new_alias)
+	if newnode == nil {
+		return cleanUpVarsOutOfScope(new_alias, node.scope)
+	}
+	node.children = append(node.children, newnode)
+	return node.getAnswerFromChild(newnode)
+}
+
+func (node *searchnode) getAnswerFromChild(child *searchnode) Bindings {
+	answer := child.GetAnswer()
+	if answer == nil {
+		node.children = node.children[1:]
+		return nil
+	} else {
+		return cleanUpVarsOutOfScope(answer, node.scope)
 	}
 }
 
@@ -152,26 +153,6 @@ func appendNewTerms(old Terms, new Terms) Terms {
 		terms = append(terms, new[i])
 	}
 	return terms
-}
-
-func (node *searchnode) awaitAnswers(child *searchnode, scope []*Var) {
-	child.Notify()
-	found_nothing := true
-	for r := range child.Answer {
-		found_nothing = false
-		a, err := r.Alias, r.Err
-		if err == Notification {
-			node.notifySelf()
-			break
-		}
-		a = cleanUpVarsOutOfScope(a, scope)
-		node.Answer <- result{a, err}
-	}
-	node.children = node.children[1:]
-	close(child.notify)
-	if found_nothing {
-		node.notifySelf()
-	}
 }
 
 func callRule(rule Rule) Rule {
