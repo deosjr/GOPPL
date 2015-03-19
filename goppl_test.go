@@ -7,8 +7,6 @@ import (
 	"GOPPL/prolog"
 )
 
-// TODO: evaluate nonterminating queries, by comparing the first X results from answer
-
 func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
 	node := prolog.EmptyDFS(query)
 	for _, bindings := range testAnswers {
@@ -31,6 +29,42 @@ func evaluateQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]st
 	alias := node.GetAnswer()
 	if alias != nil {
 		t.Errorf("Too many answers for query %s", query)
+	}
+}
+
+func evaluateQueryTrue(t *testing.T, query prolog.Terms) {
+	node := prolog.EmptyDFS(query)
+	alias := node.GetAnswer()
+	if alias == nil {
+		t.Errorf("Query evaluated to false: %s", query)
+	}
+	if len(alias) > 0 {
+		t.Errorf("Bindings found: %v", alias)
+	}
+	alias = node.GetAnswer()
+	if alias != nil {
+		t.Errorf("Too many answers for query %s", query)
+	}
+}
+
+func evaluateNonterminatingQuery(t *testing.T, query prolog.Terms, testAnswers []map[string]string) {
+	node := prolog.EmptyDFS(query)
+	for _, bindings := range testAnswers {
+		alias := node.GetAnswer()
+		if alias == nil {
+			t.Errorf("Not enough answers")
+		}
+		for k, v := range alias {
+			if _, contains := bindings[k.String()]; !contains {
+				t.Errorf("Out of scope variable %s in alias", k.String())
+			} else if v.String() != bindings[k.String()] {
+				t.Errorf("%s bound to %s, not %s", k.String(), v.String(), bindings[k.String()])
+			}
+			delete(bindings, k.String())
+		}
+		if len(bindings) > 0 {
+			t.Errorf("Unbound input variables: %v", bindings)
+		}
 	}
 }
 
@@ -68,8 +102,6 @@ func TestExample(t *testing.T) {
 		{"X": "1", "Y":"2"},
 	}
 	evaluateQuery(t, query, testAnswers)
-	//TODO: error too many answers, but testing by hand yields expected results
-	// Answer channel not properly closed? Why only for this query?
 	query = parseQuery("test(EEN).")
 	testAnswers = []map[string]string{
 		{"EEN": "1"},
@@ -85,6 +117,12 @@ func TestPeano(t *testing.T) {
 		{"X": "s(s(s(s(s(0)))))"},
 	}
 	evaluateQuery(t, query, testAnswers)
+	testAnswers = []map[string]string{
+		{"X": "0"},
+		{"X": "s(0)"},
+		{"X": "s(s(0))"},
+	}
+	evaluateNonterminatingQuery(t, parseQuery("int(X)."), testAnswers)
 }
 
 func TestLists(t *testing.T) {
@@ -107,13 +145,12 @@ func TestLists(t *testing.T) {
 	evaluateQuery(t, query, testAnswers)
 }
 
-// TODO: evaluateQueryTrue
 func TestDifferenceLists(t *testing.T) {
 	memory.InitFromFile("tests/difference_lists_test.pl")
 	memory.InitBuiltIns()
-	//evaluateQueryTrue(t, parseQuery("pal([0],[])."))
-	//evaluateQueryTrue(t, parseQuery("pal([1,0,1],[])."))
-	//evaluateQueryTrue(t, parseQuery("pal([1,1,1,1,1],[])."))
+	evaluateQueryTrue(t, parseQuery("pal([0],[])."))
+	evaluateQueryTrue(t, parseQuery("pal([1,0,1],[])."))
+	evaluateQueryTrue(t, parseQuery("pal([1,1,1,1,1],[])."))
 	query := parseQuery("pal(S, [1,0,1,0,1], []).")
 	testAnswers :=  []map[string]string{
 		{"S":"s(s(0))"},
