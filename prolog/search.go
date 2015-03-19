@@ -95,6 +95,9 @@ func (node *searchnode) exploreFunction() Bindings {
 	if alias == nil {
 		return nil
 	}
+	// This might be an ugly hack instead of a neat solution
+	// Consume the function so it can't be explored again
+	node.f = nil
 	return node.exploreFurther(new_alias, alias, node.getTerms())
 }
 

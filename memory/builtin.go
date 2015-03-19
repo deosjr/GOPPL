@@ -99,7 +99,7 @@ func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 				panic("Wrong argument for listing/1")
 			}
 			printTermInMemory(prolog.Predicate{split[0], i})
-			return a
+			return nil
 		}
 	}
 	panic("Wrong argument for listing/1")
@@ -108,5 +108,5 @@ func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 
 func listingAll(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	printMemory()	
-	return a
+	return nil
 }
