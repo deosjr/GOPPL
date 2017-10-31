@@ -1,4 +1,3 @@
-
 package memory
 
 import (
@@ -6,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"GOPPL/prolog"
+	"prolog"
 )
 
-var builtins = make( map[prolog.Predicate] prolog.Predicate)
+var builtins = make(map[prolog.Predicate]prolog.Predicate)
 
 func pred(functor string, arity int) prolog.Predicate {
 	return prolog.Predicate{functor, arity}
@@ -25,40 +24,40 @@ func InitBuiltIns() {
 	y := prolog.VarTemplate{"Y"}
 
 	//	=/2 as UNIFY(X,X)
-	unify := pred("UNIFY",2)
-	builtins[pred("=",2)] = unify
+	unify := pred("UNIFY", 2)
+	builtins[pred("=", 2)] = unify
 	addData(unify, prolog.Rule{prolog.Terms{x, x}, prolog.Terms{}})
 
 	//	not/1, also \+ /1
-	extralogical[pred("not",1)] = not
-	builtins[pred("\\+",1)] = pred("not",1)
+	extralogical[pred("not", 1)] = not
+	builtins[pred("\\+", 1)] = pred("not", 1)
 
 	//	\= /2 as not(UNIFY)
-	notunify := pred("NOTUNIFY",2)
-	builtins[pred("\\=",2)] = notunify
-	addData(notunify, prolog.Rule{prolog.Terms{x, y}, prolog.Terms{prolog.Compound_Term{pred("not",1), prolog.Terms{prolog.Compound_Term{unify, prolog.Terms{x, y}}}}}})
+	notunify := pred("NOTUNIFY", 2)
+	builtins[pred("\\=", 2)] = notunify
+	addData(notunify, prolog.Rule{prolog.Terms{x, y}, prolog.Terms{prolog.Compound_Term{pred("not", 1), prolog.Terms{prolog.Compound_Term{unify, prolog.Terms{x, y}}}}}})
 
 	// write and writeln
-	extralogical[pred("write",1)] = write
-	extralogical[pred("writeln",1)] = writeln
+	extralogical[pred("write", 1)] = write
+	extralogical[pred("writeln", 1)] = writeln
 
 	// DCG builtin predicate (TODO: might want to just rewrite better?)
-	builtins[pred("C",3)] = pred("C",3)
-	addData(pred("C",3), prolog.Rule{prolog.Terms{prolog.CreateList(prolog.Terms{x},y),x,y}, prolog.Terms{}})
+	builtins[pred("C", 3)] = pred("C", 3)
+	addData(pred("C", 3), prolog.Rule{prolog.Terms{prolog.CreateList(prolog.Terms{x}, y), x, y}, prolog.Terms{}})
 
 	// true and false
-	extralogical[pred("true",0)] = trueFunc
-	extralogical[pred("false",0)] = falseFunc
-	extralogical[pred("fail",0)] = falseFunc
+	extralogical[pred("true", 0)] = trueFunc
+	extralogical[pred("false", 0)] = falseFunc
+	extralogical[pred("fail", 0)] = falseFunc
 
 	// arithmetics
-	extralogical[pred("is",2)] = is 
-	extralogical[pred("=:=",2)] = arithmetic_equals 
-	extralogical[pred("=\\=",2)] = arithmetic_not_equals 
-	extralogical[pred("<",2)] = arithmetic_less 
-	extralogical[pred("=<",2)] = arithmetic_leq 
-	extralogical[pred(">",2)] = arithmetic_greater 
-	extralogical[pred(">=",2)] = arithmetic_geq 
+	extralogical[pred("is", 2)] = is
+	extralogical[pred("=:=", 2)] = arithmetic_equals
+	extralogical[pred("=\\=", 2)] = arithmetic_not_equals
+	extralogical[pred("<", 2)] = arithmetic_less
+	extralogical[pred("=<", 2)] = arithmetic_leq
+	extralogical[pred(">", 2)] = arithmetic_greater
+	extralogical[pred(">=", 2)] = arithmetic_geq
 }
 
 // TODO: variables in terms[0] have to be bound
@@ -72,12 +71,12 @@ func not(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 }
 
 func write(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	fmt.Print(terms[0].SubstituteVars(a))	
+	fmt.Print(terms[0].SubstituteVars(a))
 	return a
 }
 
 func writeln(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	fmt.Println(terms[0].SubstituteVars(a))	
+	fmt.Println(terms[0].SubstituteVars(a))
 	return a
 }
 
@@ -103,10 +102,10 @@ func listing(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 		}
 	}
 	panic("Wrong argument for listing/1")
-	return nil	
+	return nil
 }
 
 func listingAll(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
-	printMemory()	
+	PrintMemory()
 	return nil
 }

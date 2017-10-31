@@ -1,11 +1,10 @@
-
 package memory
 
 import (
 	"fmt"
 	"os"
-	
-	"GOPPL/prolog"
+
+	"prolog"
 )
 
 // TODO: occurs check, don't allow doubles!
@@ -18,19 +17,23 @@ func addData(pred prolog.Predicate, r prolog.Rule) {
 	}
 }
 
+func Reset() {
+	prolog.Memory = make(prolog.Data)
+}
+
 func InitFromFile(filename string) {
 	f, err := os.Open(filename)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
-	
+
 	reader := NewReader(f)
 	data, err := reader.ReadAll()
 	if err != nil {
 		panic(err)
 	}
-	
+
 	for pred, rules := range data {
 		for _, rule := range rules {
 			//err = checkSingletons(rule)
@@ -77,10 +80,10 @@ func varTemplates(terms prolog.Terms) []prolog.VarTemplate {
 }
 */
 
-func printMemory() {
-	RULES:
-	for k,_ := range prolog.Memory {
-		for _,v := range builtins {
+func PrintMemory() {
+RULES:
+	for k, _ := range prolog.Memory {
+		for _, v := range builtins {
 			if k == v {
 				continue RULES
 			}
@@ -92,28 +95,28 @@ func printMemory() {
 
 func printTermInMemory(pred prolog.Predicate) {
 	v := prolog.Memory[pred]
-	for _,rule := range v {
+	for _, rule := range v {
 		fmt.Printf("%s", pred.Functor)
 		if pred.Arity != 0 {
 			fmt.Print("(")
 		}
-		for i,h := range rule.Head {
+		for i, h := range rule.Head {
 			if i == pred.Arity-1 {
 				fmt.Printf("%s)", h.String())
 				break
 			}
-			fmt.Printf("%s,",h.String())
+			fmt.Printf("%s,", h.String())
 		}
 		if len(rule.Body) == 0 {
 			fmt.Println(".")
 		} else {
 			fmt.Println(" :-")
-			for i,b := range rule.Body {
+			for i, b := range rule.Body {
 				if i == len(rule.Body)-1 {
 					fmt.Printf("\t%s.", b.String())
 					break
 				}
-				fmt.Printf("\t%s,\n",b.String())
+				fmt.Printf("\t%s,\n", b.String())
 			}
 			fmt.Println()
 		}

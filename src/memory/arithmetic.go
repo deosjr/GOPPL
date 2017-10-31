@@ -1,15 +1,14 @@
-
 package memory
 
 import (
 	"errors"
 
-	"GOPPL/prolog"
+	"prolog"
 )
 
 var (
 	instantiationError = errors.New("arguments insufficiently instantiated")
-	zeroDivisionError = errors.New("division by zero")
+	zeroDivisionError  = errors.New("division by zero")
 )
 
 func evaluate(t prolog.Term, a prolog.Bindings) (int, error) {
@@ -20,7 +19,7 @@ func evaluate(t prolog.Term, a prolog.Bindings) (int, error) {
 		value, ok := a[t.(*prolog.Var)]
 		if ok {
 			return evaluate(value, a)
-		} 
+		}
 		return 0, instantiationError
 	case prolog.Compound_Term:
 		ct := t.(prolog.Compound_Term)
@@ -97,7 +96,7 @@ func arithmetic_equals(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	return nil
 }
 
-func arithmetic_not_equals(terms prolog.Terms, a prolog.Bindings) prolog.Bindings { 
+func arithmetic_not_equals(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	x, y := evaluateInstantiated(terms[0], a), evaluateInstantiated(terms[1], a)
 	if x != y {
 		return a
@@ -105,7 +104,7 @@ func arithmetic_not_equals(terms prolog.Terms, a prolog.Bindings) prolog.Binding
 	return nil
 }
 
-func arithmetic_less(terms prolog.Terms, a prolog.Bindings) prolog.Bindings { 
+func arithmetic_less(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	x, y := evaluateInstantiated(terms[0], a), evaluateInstantiated(terms[1], a)
 	if x < y {
 		return a
@@ -113,7 +112,7 @@ func arithmetic_less(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	return nil
 }
 
-func arithmetic_leq(terms prolog.Terms, a prolog.Bindings) prolog.Bindings { 
+func arithmetic_leq(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	x, y := evaluateInstantiated(terms[0], a), evaluateInstantiated(terms[1], a)
 	if x <= y {
 		return a
@@ -129,7 +128,7 @@ func arithmetic_greater(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	return nil
 }
 
-func arithmetic_geq(terms prolog.Terms, a prolog.Bindings) prolog.Bindings { 
+func arithmetic_geq(terms prolog.Terms, a prolog.Bindings) prolog.Bindings {
 	x, y := evaluateInstantiated(terms[0], a), evaluateInstantiated(terms[1], a)
 	if x >= y {
 		return a

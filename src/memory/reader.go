@@ -11,14 +11,14 @@ import (
 	"io"
 	"strconv"
 	"unicode"
-	
-	"GOPPL/prolog"
+
+	"prolog"
 )
 
 type ParseError struct {
-	Line int
+	Line   int
 	Column int
-	Err error
+	Err    error
 }
 
 func (e *ParseError) Error() string {
@@ -28,36 +28,36 @@ func (e *ParseError) Error() string {
 var (
 	// TODO: meaningful errors
 	ErrSyntaxError = errors.New("syntax error")
-	ErrQueryError = errors.New("syntax error in query")
+	ErrQueryError  = errors.New("syntax error in query")
 )
 
 func (r *Reader) ThrowError(err error) error {
-	return &ParseError {
-		Line: r.line,
+	return &ParseError{
+		Line:   r.line,
 		Column: r.column,
-		Err: err,
+		Err:    err,
 	}
 }
 
 type Reader struct {
-	Comment rune
-	And	rune
-	Stop rune
-	line int
-	column int
+	Comment   rune
+	And       rune
+	Stop      rune
+	line      int
+	column    int
 	Last_Read rune
-	r *bufio.Reader
-	rulebase map[prolog.Predicate][]prolog.Rule
+	r         *bufio.Reader
+	rulebase  map[prolog.Predicate][]prolog.Rule
 }
 
 // expects UTF-8 input
 func NewReader(r io.Reader) *Reader {
 	return &Reader{
-		Comment : '%',
-		And : ',',
-		Stop : '.',
-		r: bufio.NewReader(r),
-		rulebase : make(prolog.Data),
+		Comment:  '%',
+		And:      ',',
+		Stop:     '.',
+		r:        bufio.NewReader(r),
+		rulebase: make(prolog.Data),
 	}
 }
 
@@ -76,7 +76,7 @@ func (r *Reader) ReadAll() (prolog.Data, error) {
 }
 
 func (r *Reader) AtomToPredicate(t prolog.Term) (prolog.Compound_Term, error) {
-	switch term := t.(type){
+	switch term := t.(type) {
 	case prolog.Atom:
 		predicate := prolog.Predicate{term.Value(), 0}
 		return prolog.Compound_Term{predicate, prolog.Terms{}}, nil
@@ -93,19 +93,19 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 	// Check valid starting point
 	r1, _, err := r.r.ReadRune()
 	if err != nil {
-		return pred("",0), prolog.Rule{}, err
-	}	
+		return pred("", 0), prolog.Rule{}, err
+	}
 	// TODO: expand this simple check
 	if r1 == '[' {
-		return pred("",0), prolog.Rule{}, r.ThrowError(ErrSyntaxError)
+		return pred("", 0), prolog.Rule{}, r.ThrowError(ErrSyntaxError)
 	}
 	r.r.UnreadRune()
 
 	term, err := r.ReadTerm()
 	if err != nil {
-		return pred("",0), prolog.Rule{}, err
+		return pred("", 0), prolog.Rule{}, err
 	}
-	switch term.(type){
+	switch term.(type) {
 	case prolog.Atom:
 		if r.Last_Read != '.' {
 			r.r.UnreadRune()
@@ -114,31 +114,31 @@ func (r *Reader) Read() (prolog.Predicate, prolog.Rule, error) {
 
 	p, err := r.AtomToPredicate(term)
 	if err != nil {
-		return pred("",0), prolog.Rule{}, err
+		return pred("", 0), prolog.Rule{}, err
 	}
-	
+
 	if r.Last_Read == r.Stop {
 		return p.GetPredicate(), prolog.Rule{p.GetArgs(), prolog.Terms{}}, nil
 	}
-	
+
 	readfunction, err := r.readOperator()
 	if err != nil {
-		return pred("",0), prolog.Rule{}, err
+		return pred("", 0), prolog.Rule{}, err
 	}
 	terms, err := r.ReadTerms()
 	if err != nil {
-		return pred("",0), prolog.Rule{}, err
+		return pred("", 0), prolog.Rule{}, err
 	}
 	if r.Last_Read != r.Stop {
 		ok, err := r.findNext(r.Stop, true)
 		if !ok {
-			return pred("",0), prolog.Rule{}, err
+			return pred("", 0), prolog.Rule{}, err
 		}
 	}
-	return readfunction(p, terms)	
+	return readfunction(p, terms)
 }
 
-type readfunc func(prolog.Compound_Term, prolog.Terms)(prolog.Predicate, prolog.Rule, error)
+type readfunc func(prolog.Compound_Term, prolog.Terms) (prolog.Predicate, prolog.Rule, error)
 
 func (r *Reader) readRule(p prolog.Compound_Term, terms prolog.Terms) (prolog.Predicate, prolog.Rule, error) {
 	// TODO: syntax error on DCG escape {}
@@ -147,7 +147,7 @@ func (r *Reader) readRule(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pr
 	for _, t := range terms {
 		compound, err := r.AtomToPredicate(t)
 		if err != nil {
-			return pred("",0), prolog.Rule{}, err
+			return pred("", 0), prolog.Rule{}, err
 		}
 		no_atom_terms = append(no_atom_terms, compound)
 	}
@@ -164,7 +164,7 @@ func sVars(i *int) (prolog.VarTemplate, prolog.VarTemplate) {
 
 func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Predicate, prolog.Rule, error) {
 	// TODO: parse DCG escape {}
-	predicate := pred(p.GetPredicate().Functor, p.GetPredicate().Arity + 2)
+	predicate := pred(p.GetPredicate().Functor, p.GetPredicate().Arity+2)
 	endvar := prolog.VarTemplate{"RESERVED"}
 	args := append(p.GetArgs(), prolog.VarTemplate{"RESERVED0"}, endvar)
 	dcgterms := prolog.Terms{}
@@ -186,11 +186,12 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 			if index == len(terms)-1 {
 				namei1 = endvar
 			}
-			dcgterms = append(dcgterms, prolog.Compound_Term{pred("UNIFY",2), prolog.Terms{namei, namei1}})
+			dcgterms = append(dcgterms, prolog.Compound_Term{pred("UNIFY", 2), prolog.Terms{namei, namei1}})
 		case prolog.List:
 			// add C(namei, x, namei+1); i++ for x in list
 			list := t
-			LOOP: for {
+		LOOP:
+			for {
 				switch lv := list.(type) {
 				case prolog.Cons:
 					x := lv.Head()
@@ -199,7 +200,7 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 					if _, ok := list.(prolog.Nil); index == len(terms)-1 && ok {
 						namei1 = endvar
 					}
-					dcgterms = append(dcgterms, prolog.Compound_Term{pred("C",3), prolog.Terms{namei, x, namei1}})
+					dcgterms = append(dcgterms, prolog.Compound_Term{pred("C", 3), prolog.Terms{namei, x, namei1}})
 				case prolog.Nil:
 					break LOOP
 				}
@@ -210,12 +211,12 @@ func (r *Reader) readDCG(p prolog.Compound_Term, terms prolog.Terms) (prolog.Pre
 			if index == len(terms)-1 {
 				namei1 = endvar
 			}
-			pred := pred(term.GetPredicate().Functor, term.GetPredicate().Arity + 2)
+			pred := pred(term.GetPredicate().Functor, term.GetPredicate().Arity+2)
 			pargs := append(term.GetArgs(), namei, namei1)
 			dcgterms = append(dcgterms, prolog.Compound_Term{pred, pargs})
 		case prolog.VarTemplate:
 			// TODO: syntax error right ???
-			return pred("",0), prolog.Rule{}, r.ThrowError(ErrSyntaxError)
+			return pred("", 0), prolog.Rule{}, r.ThrowError(ErrSyntaxError)
 		}
 	}
 	rule := prolog.Rule{args, dcgterms}
@@ -237,7 +238,7 @@ func (r *Reader) readOperator() (readfunc, error) {
 			break
 		}
 	}
-	switch string(s){
+	switch string(s) {
 	case ":-":
 		return r.readRule, nil
 	case "-->":
@@ -269,7 +270,7 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 		if r1 == '[' {
 			if len(s) > 0 {
 				return nil, r.ThrowError(ErrSyntaxError)
-			}	
+			}
 			return r.readList()
 		}
 		if !checkValidAtomVar(r1) {
@@ -285,7 +286,7 @@ func (r *Reader) ReadTerm() (prolog.Term, error) {
 
 // ReadTerms returns a list of Terms, which where And-separated
 func (r *Reader) ReadTerms() (prolog.Terms, error) {
-	
+
 	terms := prolog.Terms{}
 	t, err := r.ReadTerm()
 	if err != nil {
@@ -303,15 +304,15 @@ func (r *Reader) ReadTerms() (prolog.Terms, error) {
 		if !ok {
 			break
 		}
-		
+
 		t, err := r.ReadTerm()
 		if err != nil {
 			return nil, err
 		}
-		terms = append(terms, t)		
+		terms = append(terms, t)
 	}
 	return terms, err
-	
+
 }
 
 func (r *Reader) checkBuiltin(ct prolog.Compound_Term, err error) (prolog.Term, error) {
@@ -340,7 +341,7 @@ func (r *Reader) readCompound(functor string) (prolog.Term, error) {
 
 func (r *Reader) readList() (prolog.Term, error) {
 	args, err := r.ReadTerms()
-	if len(args) == 0 {		
+	if len(args) == 0 {
 		if r.Last_Read != ']' {
 			return nil, r.ThrowError(ErrSyntaxError)
 		}
@@ -379,12 +380,12 @@ func (r *Reader) readAtomVar(s []rune, err error) (prolog.Term, error) {
 
 func (r *Reader) readRune() (rune, error) {
 	r1, _, err := r.r.ReadRune()
-	
+
 	if r1 == '\r' {
 		r1, _, err = r.r.ReadRune()
 		if err == nil && r1 != '\n' {
 			r.r.UnreadRune()
-			r1 = '\r'	// Should never happen, right?
+			r1 = '\r' // Should never happen, right?
 		}
 	}
 	r.column++
@@ -413,7 +414,7 @@ func (r *Reader) findNext(c rune, skip bool) (bool, error) {
 	} else {
 		r1, err = r.readRune()
 	}
-	
+
 	if err != nil {
 		return false, err
 	}
@@ -441,7 +442,7 @@ func (r *Reader) skipComment() (rune, error) {
 func (r *Reader) skipCommentsAndSpaces() (rune, error) {
 
 	r1, err := r.readRune()
-	Skip:
+Skip:
 	for err == nil {
 		switch r1 {
 		case '\n':

@@ -1,23 +1,20 @@
-
 package prolog
-
-//import "fmt"
 
 type Data map[Predicate][]Rule
 
 var Memory Data = make(Data)
-var Extralogical = make( map[Predicate] func(Terms, Bindings) Bindings )
+var Extralogical = make(map[Predicate]func(Terms, Bindings) Bindings)
 
 type searchnode struct {
 	children []*searchnode
-	term Compound_Term
-	stack Terms 			// newest item in stack at end: stack[len-1] (->)
-	answers []Bindings
-	alias Bindings
-	scope []*Var
-	rules []Rule
-	f func(Terms, Bindings) Bindings
-	start bool
+	term     Compound_Term
+	stack    Terms // newest item in stack at end: stack[len-1] (->)
+	answers  []Bindings
+	alias    Bindings
+	scope    []*Var
+	rules    []Rule
+	f        func(Terms, Bindings) Bindings
+	start    bool
 }
 
 // returns nil if nothing remains to be explored
@@ -28,7 +25,7 @@ func newNode(terms Terms, alias Bindings) *searchnode {
 	}
 	term := terms[len(terms)-1].(Compound_Term)
 	scope := []*Var{}
-	for k,_ := range alias {
+	for k, _ := range alias {
 		scope = append(scope, k)
 	}
 	scope = append(scope, VarsInTermArgs(term.GetArgs())...)
@@ -120,7 +117,7 @@ func (node *searchnode) exploreRules() Bindings {
 
 func (node *searchnode) prepareExplore() Bindings {
 	new_alias := make(Bindings)
-	for k,v := range node.alias {
+	for k, v := range node.alias {
 		new_alias[k] = v
 	}
 	return new_alias
@@ -128,7 +125,7 @@ func (node *searchnode) prepareExplore() Bindings {
 
 func (node *searchnode) exploreFurther(new_alias Bindings, alias Bindings, newterms Terms) Bindings {
 	clash := UpdateAlias(new_alias, alias)
-	if clash { 
+	if clash {
 		return nil
 	}
 	newnode := newNode(newterms, new_alias)
@@ -152,7 +149,7 @@ func (node *searchnode) getAnswerFromChild(child *searchnode) Bindings {
 func appendNewTerms(old Terms, new Terms) Terms {
 	terms := make(Terms, len(old))
 	copy(terms, old)
-	for i := len(new)-1; i >= 0; i-- {
+	for i := len(new) - 1; i >= 0; i-- {
 		terms = append(terms, new[i])
 	}
 	return terms
@@ -191,7 +188,7 @@ func (v VarTemplate) CreateVars(va tempBindings) (Term, tempBindings) {
 	if renamed {
 		return value, va
 	}
-	newv := &Var{v.Name}	
+	newv := &Var{v.Name}
 	va[v] = newv
 	return newv, va
 }
@@ -199,7 +196,7 @@ func (v VarTemplate) CreateVars(va tempBindings) (Term, tempBindings) {
 func (c Compound_Term) CreateVars(va tempBindings) (Term, tempBindings) {
 	renamed_args := Terms{}
 	for _, ot := range c.GetArgs() {
-		vt, va := ot.CreateVars( va)
+		vt, va := ot.CreateVars(va)
 		va = va
 		renamed_args = append(renamed_args, vt)
 	}
@@ -213,7 +210,7 @@ func (n Nil) CreateVars(va tempBindings) (Term, tempBindings) {
 func (c Cons) CreateVars(va tempBindings) (Term, tempBindings) {
 	renamed_args := Terms{}
 	for _, ot := range c.GetArgs() {
-		vt, va := ot.CreateVars( va)
+		vt, va := ot.CreateVars(va)
 		va = va
 		renamed_args = append(renamed_args, vt)
 	}
@@ -223,7 +220,7 @@ func (c Cons) CreateVars(va tempBindings) (Term, tempBindings) {
 func cleanUpVarsOutOfScope(to_clean Bindings, scope []*Var) Bindings {
 
 	clean := make(Bindings)
-	for _, v := range scope {	
+	for _, v := range scope {
 		clean[v] = v.SubstituteVars(to_clean)
 	}
 	return clean

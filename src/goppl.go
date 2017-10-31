@@ -2,15 +2,15 @@ package main
 
 import (
 	"bufio"
-	"io"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	
-	"GOPPL/memory"
-	"GOPPL/prolog"
+
+	"memory"
+	"prolog"
 )
 
 // TODO: multi-term queries: int(X), int(Y).
@@ -21,18 +21,18 @@ func main() {
 	var file string
 	flag.StringVar(&file, "f", "", ".pl or .pro file")
 	flag.Parse()
-	
+
 	if file == "" {
 		memory.InitBuiltIns()
 		REPL()
 		return
 	}
-	
-	if filepath.Ext(file) != ".pl" && filepath.Ext(file) != ".pro"{
+
+	if filepath.Ext(file) != ".pl" && filepath.Ext(file) != ".pro" {
 		fmt.Println("Input a valid Prolog filename.")
 		return
 	}
-	
+
 	memory.InitBuiltIns()
 	memory.InitFromFile(file)
 	REPL()
@@ -53,7 +53,7 @@ func parseQuery(q string) prolog.Terms {
 	}
 	var_alias := make(map[prolog.VarTemplate]prolog.Term)
 	query := prolog.Terms{}
-	for i := len(terms)-1; i >= 0; i-- {
+	for i := len(terms) - 1; i >= 0; i-- {
 		compound, err := reader.AtomToPredicate(terms[i])
 		if err != nil {
 			panic(err)
@@ -76,28 +76,27 @@ func REPL() {
 		s := bufio.NewScanner(os.Stdin)
 		s.Scan()
 		input := s.Text()
-		
+
 		query := parseQuery(input)
 		node := prolog.EmptyDFS(query)
-		
+
 		wait := true
-		s.Split(bufio.ScanRunes)
 		alias := node.GetAnswer()
-		ANSWERS:
+	ANSWERS:
 		for alias != nil {
 			if len(alias) == 0 {
 				fmt.Print("True.")
 			} else {
-				for k,v := range alias {
+				for k, v := range alias {
 					fmt.Printf("%s = %s. ", k, v.String())
 				}
 			}
 			if wait {
-				WAIT:
+			WAIT:
 				for {
 					s.Scan()
 					switch s.Text() {
-					case ";": 
+					case ";":
 						break WAIT
 					case "a":
 						wait = false
@@ -113,6 +112,6 @@ func REPL() {
 			alias = node.GetAnswer()
 		}
 		fmt.Println("False.")
-	
+
 	}
 }
